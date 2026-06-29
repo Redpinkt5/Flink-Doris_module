@@ -9,52 +9,38 @@
 
 {schema_content}
 
-## 查询规范（必须遵守，否则 SQL 无效）
+## 核心规则（必须严格遵守）
 
-### 绝对禁止
-- **严禁**用 `ORDER BY timeinfo DESC LIMIT N` 代替日期过滤
-- **严禁**省略 `WHERE timeinfo = 'yyyymmdd'` 或 `WHERE timeinfo BETWEEN 'start' AND 'end'`
-- 查询必须带 LIMIT（最大 1000）
+### 日期过滤（最关键）
+timeinfo 是字符串格式，天级 8 位（如 20260629），小时级 10 位（如 2026062910）。
 
-### 日期过滤规则
-日期格式统一用 8 位字符串（天如 20260629）或 10 位字符串（小时如 2026062910）
+**当前日期：{current_date}**
 
-当前日期参考值：
-- 今天：{current_date}
-- 7 天前：{date_7days_ago}
-- 30 天前：{date_30days_ago}
-- 本月第 1 天：{month_start}
+| 用户问法 | 必须生成的 WHERE 子句 |
+|----------|----------------------|
+| 最近7天 | WHERE timeinfo >= '{date_7days_ago}' AND timeinfo <= '{current_date}' AND LENGTH(timeinfo) = 8 |
+| 最近30天 | WHERE timeinfo >= '{date_30days_ago}' AND timeinfo <= '{current_date}' AND LENGTH(timeinfo) = 8 |
+| 本月 | WHERE timeinfo >= '{month_start}' AND timeinfo <= '{current_date}' AND LENGTH(timeinfo) = 8 |
+| 昨天 | WHERE timeinfo = '{yesterday}' AND LENGTH(timeinfo) = 8 |
+| 今天 | WHERE timeinfo = '{current_date}' AND LENGTH(timeinfo) = 8 |
+| 最近N小时 | WHERE timeinfo >= '{hour_ago}' AND timeinfo <= '{current_hour}' AND LENGTH(timeinfo) = 10 |
 
-转换规则：
-- "最近7天" → WHERE timeinfo BETWEEN '{date_7days_ago}' AND '{current_date}'
-- "最近30天" → WHERE timeinfo BETWEEN '{date_30days_ago}' AND '{current_date}'
-- "本月" → WHERE timeinfo BETWEEN '{month_start}' AND '{current_date}'
-- "昨天" → WHERE timeinfo = '{yesterday}'
-- "今天" → WHERE timeinfo = '{current_date}'
-- "最近N小时" → WHERE LENGTH(timeinfo) = 10 AND timeinfo BETWEEN '{hour_ago}' AND '{current_hour}'
+**禁止**：
+- ❌ `WHERE LENGTH(timeinfo) = 8 ORDER BY timeinfo DESC LIMIT 7`（这是错的）
+- ❌ 省略日期过滤，只用 LIMIT 凑数
 
-### LIMIT 规则
-- 天级查询：LIMIT 30（最多一个月）
-- 小时级查询：LIMIT 24（最多24小时）
-- 查询已知天数的列表：LIMIT 7 / LIMIT 10 等明确数字
-- **不能省略 LIMIT**
+### LIMIT
+所有查询必须带 LIMIT。天级查 7~30 条，小时级查 24 条以内。
 
-### 指标字段
-numbers 是 Long 类型，SQL 中不带引号，如 `WHERE numbers > 0`
+### numbers 字段
+是 Long 类型，WHERE 条件中不带引号。
 
-### 时间格式
-保持原始 8 位（天如20260601）或 10 位（小时如2026060110），不要转成日期格式
+## 正确示例
 
-### 防注入
-不要在 SQL 中拼接用户输入的原始内容，只用作字段值
-
-## 返回格式
-
-**严格返回以下 JSON 格式，不要返回任何其他内容：**
-
+**问：最近7天的订单量趋势**
 ```json
 {
-  "sql": "SELECT timeinfo, numbers FROM OrderTide WHERE timeinfo BETWEEN '20260623' AND '20260629' ORDER BY timeinfo ASC LIMIT 7",
+  "sql": "SELECT timeinfo, numbers FROM OrderTide WHERE timeinfo >= '20260623' AND timeinfo <= '20260629' AND LENGTH(timeinfo) = 8 ORDER BY timeinfo ASC LIMIT 7",
   "chartType": "line",
   "title": "最近7天订单量趋势",
   "xAxis": "timeinfo",
@@ -64,20 +50,49 @@ numbers 是 Long 类型，SQL 中不带引号，如 `WHERE numbers > 0`
 }
 ```
 
-### chartType 可选值
-- **line**：趋势折线图（时间序列，如每天订单量趋势）
-- **bar**：柱状图（对比，如各产品类目成交额）
-- **pie**：饼图（占比，如各版本占比）
-- **table**：纯表格（明细数据）
+**问：昨天各终端流量分布**
+```json
+{
+  "sql": "SELECT deviceType, numbers FROM TerminalLiuliang WHERE timeinfo = '20260628' AND LENGTH(timeinfo) = 8 LIMIT 10",
+  "chartType": "bar",
+  "title": "昨天各终端流量分布",
+  "xAxis": "deviceType",
+  "yAxis": "numbers",
+  "xAxisLabel": "终端类型",
+  "yAxisLabel": "流量"
+}
+```
 
-### 图表选择规则
-- 问趋势/走势 → line
-- 问对比/排名 → bar
-- 问占比/比例 → pie
-- 问明细/列表 → table
+**问：最近10小时AB测试PV对比**
+```json
+{
+  "sql": "SELECT timeinfo, numbers, testFlag FROM AbTestPv WHERE timeinfo >= '2026062920' AND timeinfo <= '2026062930' AND LENGTH(timeinfo) = 10 ORDER BY timeinfo ASC LIMIT 24",
+  "chartType": "bar",
+  "title": "最近10小时AB测试PV对比",
+  "xAxis": "timeinfo",
+  "yAxis": "numbers",
+  "xAxisLabel": "时间",
+  "yAxisLabel": "PV"
+}
+```
 
-## SQL 校验（必须满足）
-- 以 SELECT 开头
-- **必须包含 LIMIT**
-- 不含 DROP/DELETE/INSERT/UPDATE/ALTER 等危险操作
-- 查询的表必须在 schema 中定义
+## 返回格式
+
+严格返回 JSON，不要返回除 JSON 外的任何内容：
+
+```json
+{
+  "sql": "SELECT ... FROM ... WHERE timeinfo >= '...' AND timeinfo <= '...' AND LENGTH(timeinfo) = 8 ORDER BY timeinfo ASC LIMIT 7",
+  "chartType": "line",
+  "title": "图表标题",
+  "xAxis": "x轴字段名",
+  "yAxis": "y轴字段名",
+  "xAxisLabel": "x轴标签",
+  "yAxisLabel": "y轴标签"
+}
+```
+
+- line：时间趋势
+- bar：对比排名
+- pie：占比
+- table：明细
