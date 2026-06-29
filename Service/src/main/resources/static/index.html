@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 数据分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: #f1f5f9;
+            padding: 8px 0;
+        }
+
+        .search-box input::placeholder {
+            color: #475569;
+        }
+
+        .search-box button {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .search-box button:hover {
+            opacity: 0.9;
+        }
+
+        .search-box button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            color: #f87171;
+            font-size: 13px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .result-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .sql-tag {
+            font-size: 11px;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #0f172a;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+        }
+
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #1e293b;
+            color: #e2e8f0;
+        }
+
+        tr:hover td {
+            background: #273549;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3b82f6;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .examples span {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .example-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>AI 数据分析</h1>
+        <p>用自然语言查询数据，自动生成图表</p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="question" placeholder="例如：最近7天的订单量趋势" onkeydown="if(event.key==='Enter')query()">
+        <button id="submitBtn" onclick="query()">查询</button>
+    </div>
+
+    <div class="examples">
+        <span>试试：</span>
+        <button class="example-btn" onclick="setQuestion('最近7天的订单量趋势')">最近7天订单量</button>
+        <button class="example-btn" onclick="setQuestion('各产品类目成交数量对比')">各产品类目成交</button>
+        <button class="example-btn" onclick="setQuestion('ABTest各版本PV占比')">ABTest版本占比</button>
+        <button class="example-btn" onclick="setQuestion('最近7天各终端流量')">终端流量趋势</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="result-card" id="resultCard">
+        <div class="result-header">
+            <span class="result-title" id="resultTitle">-</span>
+            <span class="sql-tag" id="sqlTag"></span>
+        </div>
+        <div id="chart"></div>
+    </div>
+</div>
+
+<script>
+    const API = '/CollectService/ai/query';
+    let chart = null;
+
+    function setQuestion(q) {
+        document.getElementById('question').value = q;
+        query();
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function query() {
+        const question = document.getElementById('question').value.trim();
+        if (!question) return;
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '分析中';
+        hideError();
+
+        const resultCard = document.getElementById('resultCard');
+        resultCard.style.display = 'block';
+        document.getElementById('chart').innerHTML = '<div class="loading">正在查询...</div>';
+
+        fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '查询';
+
+            if (!data.success) {
+                showError(data.errorMessage || '查询失败');
+                return;
+            }
+
+            document.getElementById('resultTitle').textContent = data.chartTitle || '查询结果';
+            document.getElementById('sqlTag').textContent = data.sql || '';
+
+            renderResult(data);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = '查询';
+            showError('网络错误: ' + err.message);
+        });
+    }
+
+    function renderResult(data) {
+        const chartType = data.chartType || 'table';
+        const container = document.getElementById('chart');
+
+        if (chartType === 'table' || !data.rows || data.rows.length === 0) {
+            renderTable(container, data.columns, data.rows || []);
+            return;
+        }
+
+        // 初始化 ECharts
+        if (!chart) {
+            chart = echarts.init(container);
+        } else {
+            chart.clear();
+        }
+
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+
+        // x轴数据
+        const xField = data.xAxisField || columns[0];
+        // y轴数据（可能是多个，用第一个指标列）
+        const yField = data.yAxisField || (columns.length > 1 ? columns[1] : columns[0]);
+
+        let option;
+
+        if (chartType === 'line' || chartType === 'bar') {
+            const xData = rows.map(r => formatXAxis(r[xField], data.columns.indexOf(xField)));
+            const yData = rows.map(r => parseFloat(r[yField]) || 0);
+
+            // 多系列检测：如果其他列也有数值数据
+            const series = [];
+            for (let i = 1; i < columns.length; i++) {
+                const col = columns[i];
+                if (col === xField) continue;
+                series.push({
+                    name: col,
+                    type: chartType,
+                    data: rows.map(r => parseFloat(r[col]) || 0),
+                    smooth: chartType === 'line',
+                    itemStyle: { color: i === 1 ? '#60a5fa' : '#a78bfa' }
+                });
+            }
+
+            if (series.length === 0) {
+                series.push({
+                    name: yField,
+                    type: chartType,
+                    data: yData,
+                    smooth: chartType === 'line',
+                    itemStyle: { color: '#60a5fa' }
+                });
+            }
+
+            option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#1e293b',
+                    borderColor: '#334155',
+                    textStyle: { color: '#e2e8f0' }
+                },
+                legend: {
+                    data: series.map(s => s.name),
+                    textStyle: { color: '#94a3b8' },
+                    top: 0
+                },
+                grid: { left: 50, right: 20, top: 40, bottom: 40 },
+                xAxis: {
+                    type: 'category',
+                    data: xData,
+                    axisLine: { lineStyle: { color: '#334155' } },
+                    axisLabel: { color: '#64748b', rotate: 30 },
+                    splitLine: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: data.yAxisLabel || '',
+                    nameTextStyle: { color: '#64748b' },
+                    axisLine: { show: false },
+                    axisLabel: { color: '#64748b' },
+                    splitLine: { lineStyle: { color: '#1e293b' } }
+                },
+                series
+            };
+
+        } else if (chartType === 'pie') {
+            const dimField = data.xAxisField || columns[0];
+            const metricField = data.yAxisField || (columns.length > 1 ? columns[1] : columns[0]);
+
+            const pieData = rows.map(r => ({
+                name: r[dimField],
+                value: parseFloat(r[metricField]) || 0
+            }));
+
+            option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1e293b',
+                    borderColor: '#334155',
+                    textStyle: { color: '#e2e8f0' }
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 20,
+                    top: 'center',
+                    textStyle: { color: '#94a3b8' }
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['35%', '65%'],
+                    center: ['40%', '50%'],
+                    data: pieData,
+                    itemStyle: {
+                        borderRadius: 4,
+                        borderColor: '#1e293b',
+                        borderWidth: 2
+                    },
+                    label: {
+                        color: '#94a3b8',
+                        formatter: '{b}: {d}%'
+                    }
+                }]
+            };
+        } else {
+            renderTable(container, data.columns, data.rows);
+            return;
+        }
+
+        chart.setOption(option, true);
+    }
+
+    function renderTable(container, columns, rows) {
+        if (!columns || columns.length === 0) {
+            container.innerHTML = '<div class="loading">无数据</div>';
+            return;
+        }
+
+        let html = '<div class="table-wrapper"><table>';
+        html += '<thead><tr>';
+        columns.forEach(col => { html += `<th>${col}</th>`; });
+        html += '</tr></thead><tbody>';
+
+        if (!rows || rows.length === 0) {
+            html += '<tr><td colspan="' + columns.length + '" style="text-align:center;color:#64748b;padding:40px">暂无数据</td></tr>';
+        } else {
+            rows.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    html += `<td>${row[col] ?? ''}</td>`;
+                });
+                html += '</tr>';
+            });
+        }
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    function formatXAxis(value, colIndex) {
+        if (!value) return '';
+        const str = String(value);
+        // 8位天级日期 20260629 -> 2026-06-29
+        if (str.length === 8) {
+            return str.slice(0, 4) + '-' + str.slice(4, 6) + '-' + str.slice(6, 8);
+        }
+        // 10位小时级 2026062910 -> 06-29 10时
+        if (str.length === 10) {
+            return str.slice(4, 6) + '-' + str.slice(6, 8) + ' ' + str.slice(8, 10) + '时';
+        }
+        return str;
+    }
+
+    // 响应窗口变化
+    window.addEventListener('resize', () => {
+        if (chart) chart.resize();
+    });
+</script>
+</body>
+</html>

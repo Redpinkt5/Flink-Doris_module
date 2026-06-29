@@ -18,7 +18,7 @@ import java.util.*;
 
 /**
  * AI 问答服务核心
- * 编排：Prompt → DeepSeek LLM → SQL → Doris → 结果转换
+ * 编排：Prompt → DeepSeek LLM → SQL → Doris → 结果转换 + 图表配置
  */
 @Service
 public class AiService {
@@ -53,8 +53,6 @@ public class AiService {
 
     /**
      * 处理用户自然语言查询
-     * @param question 用户问题
-     * @return AI 查询结果
      */
     public AiQueryResult ask(String question) {
         if (question == null || question.trim().isEmpty()) {
@@ -67,16 +65,17 @@ public class AiService {
             String userPrompt = promptBuilder.buildUserPrompt(question);
 
             // 2. 调用 DeepSeek
-            String sql = callDeepSeek(systemPrompt, userPrompt);
-            if (sql == null || sql.trim().isEmpty()) {
+            LlmResponse llmResponse = callDeepSeek(systemPrompt, userPrompt);
+            if (llmResponse == null || llmResponse.sql == null || llmResponse.sql.trim().isEmpty()) {
                 return AiQueryResult.fail("AI 未能生成有效 SQL，请换个问法");
             }
 
-            // 3. 清理 SQL（去除 markdown 代码块标记）
-            sql = cleanSql(sql);
+            // 3. 清理 SQL
+            String sql = llmResponse.sql.trim().replaceAll("^```sql\\s*", "")
+                    .replaceAll("^```\\s*", "").replaceAll("\\s*```$", "").trim();
 
             // 4. 校验 SQL
-            var validation = sqlValidator.validate(sql);
+            AiSqlValidator.ValidationResult validation = sqlValidator.validate(sql);
             if (!validation.isValid()) {
                 logger.warn("SQL validation failed: {} | SQL: {}", validation.getErrorMessage(), sql);
                 return AiQueryResult.fail("生成的 SQL 不符合安全规范: " + validation.getErrorMessage());
@@ -86,13 +85,19 @@ public class AiService {
             logger.info("Executing SQL: {}", sql);
             QueryResult queryResult = executeSql(sql);
 
-            // 6. 构建返回结果
+            // 6. 构建返回结果（含图表配置）
             AiQueryResult result = new AiQueryResult();
             result.setSuccess(true);
             result.setSql(sql);
             result.setColumns(queryResult.columns);
             result.setRows(queryResult.rows);
             result.setRowCount(queryResult.rows.size());
+            result.setChartType(llmResponse.chartType);
+            result.setChartTitle(llmResponse.title);
+            result.setxAxisField(llmResponse.xAxis);
+            result.setyAxisField(llmResponse.yAxis);
+            result.setxAxisLabel(llmResponse.xAxisLabel);
+            result.setyAxisLabel(llmResponse.yAxisLabel);
 
             return result;
 
@@ -103,9 +108,9 @@ public class AiService {
     }
 
     /**
-     * 调用 DeepSeek LLM
+     * 调用 DeepSeek LLM，解析 JSON 结构化返回
      */
-    private String callDeepSeek(String systemPrompt, String userPrompt) throws Exception {
+    private LlmResponse callDeepSeek(String systemPrompt, String userPrompt) throws Exception {
         JsonObject messageSystem = new JsonObject();
         messageSystem.addProperty("role", "system");
         messageSystem.addProperty("content", systemPrompt);
@@ -121,8 +126,8 @@ public class AiService {
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("model", modelName);
         requestBody.add("messages", messages);
-        requestBody.addProperty("temperature", 0.1);  // 低温度，保证 SQL 稳定性
-        requestBody.addProperty("max_tokens", 500);
+        requestBody.addProperty("temperature", 0.1);
+        requestBody.addProperty("max_tokens", 800);
 
         RequestBody body = RequestBody.create(
                 gson.toJson(requestBody),
@@ -144,33 +149,51 @@ public class AiService {
             String responseBody = response.body() != null ? response.body().string() : "";
             JsonObject responseJson = gson.fromJson(responseBody, JsonObject.class);
 
-            // 解析 DeepSeek 返回
             JsonArray choices = responseJson.getAsJsonArray("choices");
-            if (choices != null && choices.size() > 0) {
-                JsonObject choice = choices.get(0).getAsJsonObject();
-                JsonObject message = choice.getAsJsonObject().getAsJsonObject("message");
-                return message.get("content").getAsString().trim();
+            if (choices == null || choices.size() == 0) {
+                if (responseJson.has("error")) {
+                    throw new RuntimeException("DeepSeek error: " + responseJson.get("error"));
+                }
+                return null;
             }
 
-            // 检查错误
-            if (responseJson.has("error")) {
-                throw new RuntimeException("DeepSeek error: " + responseJson.get("error"));
-            }
+            JsonObject choice = choices.get(0).getAsJsonObject();
+            JsonObject message = choice.getAsJsonObject().getAsJsonObject("message");
+            String content = message.get("content").getAsString().trim();
 
-            return null;
+            // 尝试解析 JSON 返回
+            return parseLlmResponse(content);
+
         }
     }
 
     /**
-     * 清理 SQL 中的 markdown 代码块标记
+     * 从 LLM 返回内容中解析 JSON（处理 markdown 代码块）
      */
-    private String cleanSql(String sql) {
-        sql = sql.trim();
-        // 去除 ```sql 或 ``` 标记
-        sql = sql.replaceAll("^```sql\\s*", "");
-        sql = sql.replaceAll("^```\\s*", "");
-        sql = sql.replaceAll("\\s*```$", "");
-        return sql.trim();
+    private LlmResponse parseLlmResponse(String content) {
+        String jsonStr = content;
+        // 去除 markdown 代码块
+        jsonStr = jsonStr.replaceAll("^```json\\s*", "").replaceAll("^```\\s*", "").replaceAll("\\s*```$", "").trim();
+
+        try {
+            JsonObject obj = gson.fromJson(jsonStr, JsonObject.class);
+            LlmResponse resp = new LlmResponse();
+            resp.sql = obj.has("sql") ? obj.get("sql").getAsString() : "";
+            resp.chartType = obj.has("chartType") ? obj.get("chartType").getAsString() : "table";
+            resp.title = obj.has("title") ? obj.get("title").getAsString() : "";
+            resp.xAxis = obj.has("xAxis") ? obj.get("xAxis").getAsString() : "";
+            resp.yAxis = obj.has("yAxis") ? obj.get("yAxis").getAsString() : "";
+            resp.xAxisLabel = obj.has("xAxisLabel") ? obj.get("xAxisLabel").getAsString() : "";
+            resp.yAxisLabel = obj.has("yAxisLabel") ? obj.get("yAxisLabel").getAsString() : "";
+            return resp;
+        } catch (Exception e) {
+            logger.warn("Failed to parse LLM response as JSON, falling back to plain text: {}", e.getMessage());
+            // 降级：把整段内容当 SQL，图表默认 table
+            LlmResponse resp = new LlmResponse();
+            resp.sql = jsonStr;
+            resp.chartType = "table";
+            return resp;
+        }
     }
 
     /**
@@ -189,12 +212,10 @@ public class AiService {
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
 
-            // 获取列名
             for (int i = 1; i <= columnCount; i++) {
                 result.columns.add(metaData.getColumnLabel(i));
             }
 
-            // 获取数据行
             while (rs.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
@@ -223,6 +244,13 @@ public class AiService {
         private List<String> columns;
         private List<Map<String, Object>> rows;
         private int rowCount;
+        // 图表配置
+        private String chartType;
+        private String chartTitle;
+        private String xAxisField;
+        private String yAxisField;
+        private String xAxisLabel;
+        private String yAxisLabel;
 
         public static AiQueryResult fail(String message) {
             AiQueryResult r = new AiQueryResult();
@@ -243,10 +271,32 @@ public class AiService {
         public void setRows(List<Map<String, Object>> rows) { this.rows = rows; }
         public int getRowCount() { return rowCount; }
         public void setRowCount(int rowCount) { this.rowCount = rowCount; }
+        public String getChartType() { return chartType; }
+        public void setChartType(String chartType) { this.chartType = chartType; }
+        public String getChartTitle() { return chartTitle; }
+        public void setChartTitle(String chartTitle) { this.chartTitle = chartTitle; }
+        public String getxAxisField() { return xAxisField; }
+        public void setxAxisField(String xAxisField) { this.xAxisField = xAxisField; }
+        public String getyAxisField() { return yAxisField; }
+        public void setyAxisField(String yAxisField) { this.yAxisField = yAxisField; }
+        public String getxAxisLabel() { return xAxisLabel; }
+        public void setxAxisLabel(String xAxisLabel) { this.xAxisLabel = xAxisLabel; }
+        public String getyAxisLabel() { return yAxisLabel; }
+        public void setyAxisLabel(String yAxisLabel) { this.yAxisLabel = yAxisLabel; }
     }
 
     private static class QueryResult {
         List<String> columns;
         List<Map<String, Object>> rows;
+    }
+
+    private static class LlmResponse {
+        String sql;
+        String chartType;
+        String title;
+        String xAxis;
+        String yAxis;
+        String xAxisLabel;
+        String yAxisLabel;
     }
 }
