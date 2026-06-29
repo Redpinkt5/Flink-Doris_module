@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -31,12 +32,25 @@ public class AiPromptBuilder {
             systemPromptTemplate = loadTemplate();
         }
         String schemaContent = schemaConfig.getTableSchemaForPrompt();
+
+        LocalDate today = LocalDate.now();
+        String currentDate = today.format(DAY_FMT);
+        String yesterday = today.minusDays(1).format(DAY_FMT);
+
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter HOUR_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
+        String currentHour = now.format(HOUR_FMT);
+        String hourAgo = now.minusHours(10).format(HOUR_FMT);
+
         return systemPromptTemplate
                 .replace("{schema_content}", schemaContent)
-                .replace("{current_date}", LocalDate.now().format(DAY_FMT))
-                .replace("{date_7days_ago}", LocalDate.now().minusDays(7).format(DAY_FMT))
-                .replace("{date_30days_ago}", LocalDate.now().minusDays(30).format(DAY_FMT))
-                .replace("{month_start}", LocalDate.now().withDayOfMonth(1).format(DAY_FMT));
+                .replace("{current_date}", currentDate)
+                .replace("{yesterday}", yesterday)
+                .replace("{date_7days_ago}", today.minusDays(7).format(DAY_FMT))
+                .replace("{date_30days_ago}", today.minusDays(30).format(DAY_FMT))
+                .replace("{month_start}", today.withDayOfMonth(1).format(DAY_FMT))
+                .replace("{current_hour}", currentHour)
+                .replace("{hour_ago}", hourAgo);
     }
 
     public String buildUserPrompt(String question) {

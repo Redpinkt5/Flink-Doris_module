@@ -60,6 +60,14 @@ public class AiSqlValidator {
         ALLOWED_KEYWORDS.add("PARTITION");
         ALLOWED_KEYWORDS.add("LENGTH");
         ALLOWED_KEYWORDS.add("SUBSTRING");
+        ALLOWED_KEYWORDS.add("DATE_ADD");
+        ALLOWED_KEYWORDS.add("DATE_SUB");
+        ALLOWED_KEYWORDS.add("DATE_FORMAT");
+        ALLOWED_KEYWORDS.add("DATE");
+        ALLOWED_KEYWORDS.add("HOUR");
+        ALLOWED_KEYWORDS.add("DAY");
+        ALLOWED_KEYWORDS.add("MONTH");
+        ALLOWED_KEYWORDS.add("YEAR");
 
         BLOCKED_KEYWORDS.add("DROP");
         BLOCKED_KEYWORDS.add("DELETE");
@@ -109,17 +117,20 @@ public class AiSqlValidator {
             return ValidationResult.fail("仅允许 SELECT 查询");
         }
 
-        // 4. 检查是否有合理的 LIMIT
+        // 4. 检查是否有 LIMIT
         if (!Pattern.compile("LIMIT\\s+\\d+", Pattern.CASE_INSENSITIVE).matcher(trimmedSql).find()) {
             return ValidationResult.fail("必须包含 LIMIT 限制返回条数");
         }
 
-        // 5. 检查 LIMIT 值是否合理（不超过 1000）
-        var limitMatcher = Pattern.compile("LIMIT\\s+(\\d+)", Pattern.CASE_INSENSITIVE).matcher(trimmedSql);
+        // 5. 检查 LIMIT 值是否合理（不超过 1000，最小 1）
+        java.util.regex.Matcher limitMatcher = Pattern.compile("LIMIT\\s+(\\d+)", Pattern.CASE_INSENSITIVE).matcher(trimmedSql);
         if (limitMatcher.find()) {
             int limitValue = Integer.parseInt(limitMatcher.group(1));
             if (limitValue > 1000) {
                 return ValidationResult.fail("LIMIT 值不能超过 1000");
+            }
+            if (limitValue < 1) {
+                return ValidationResult.fail("LIMIT 值不能小于 1");
             }
         }
 

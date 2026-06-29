@@ -9,35 +9,44 @@
 
 {schema_content}
 
-## 重要查询规则
+## 查询规范（必须遵守，否则 SQL 无效）
 
-1. **timeinfo 时间字段过滤**：
-   - 查天级趋势：WHERE LENGTH(timeinfo) = 8（如 timeinfo = '20260601'）
-   - 查小时级趋势：WHERE LENGTH(timeinfo) = 10（如 timeinfo = '2026060110'）
-   - **绝对不能用 LIMIT 代替日期过滤**，"最近7天"必须计算日期区间
-   - 排序：ORDER BY timeinfo ASC（趋势图按时间升序）
+### 绝对禁止
+- **严禁**用 `ORDER BY timeinfo DESC LIMIT N` 代替日期过滤
+- **严禁**省略 `WHERE timeinfo = 'yyyymmdd'` 或 `WHERE timeinfo BETWEEN 'start' AND 'end'`
+- 查询必须带 LIMIT（最大 1000）
 
-2. **指标字段 numbers 是 Long 类型，SQL 中不带引号**
+### 日期过滤规则
+日期格式统一用 8 位字符串（天如 20260629）或 10 位字符串（小时如 2026062910）
 
-3. **动态日期计算（关键）**：
-   - 当前日期：{current_date}
-   - "最近7天" → timeinfo BETWEEN '{date_7days_ago}' AND '{current_date}'
-   - "最近30天" → timeinfo BETWEEN '{date_30days_ago}' AND '{current_date}'
-   - "本月" → timeinfo BETWEEN '{month_start}' AND '{current_date}'
-   - 日期格式统一用 8 位字符串 20260629
+当前日期参考值：
+- 今天：{current_date}
+- 7 天前：{date_7days_ago}
+- 30 天前：{date_30days_ago}
+- 本月第 1 天：{month_start}
 
-4. **多版本/多维度趋势查询**：使用窗口函数取每个分组最新数据
-   示例（按版本查ABTest趋势）：
-   SELECT timeinfo, numbers, testFlag FROM (
-     SELECT timeinfo, numbers, testFlag,
-       ROW_NUMBER() OVER(PARTITION BY testFlag ORDER BY timeinfo DESC) as rn
-     FROM AbTestPvTotal
-     WHERE LENGTH(timeinfo) = 8
-   ) t WHERE rn <= 10 ORDER BY timeinfo, testFlag
+转换规则：
+- "最近7天" → WHERE timeinfo BETWEEN '{date_7days_ago}' AND '{current_date}'
+- "最近30天" → WHERE timeinfo BETWEEN '{date_30days_ago}' AND '{current_date}'
+- "本月" → WHERE timeinfo BETWEEN '{month_start}' AND '{current_date}'
+- "昨天" → WHERE timeinfo = '{yesterday}'
+- "今天" → WHERE timeinfo = '{current_date}'
+- "最近N小时" → WHERE LENGTH(timeinfo) = 10 AND timeinfo BETWEEN '{hour_ago}' AND '{current_hour}'
 
-5. **时间格式**：保持原始 8 位（天如20260601）或 10 位（小时如2026060110），不要转成日期格式
+### LIMIT 规则
+- 天级查询：LIMIT 30（最多一个月）
+- 小时级查询：LIMIT 24（最多24小时）
+- 查询已知天数的列表：LIMIT 7 / LIMIT 10 等明确数字
+- **不能省略 LIMIT**
 
-6. **防注入**：不要在 SQL 中拼接用户输入的原始内容，只用作字段值
+### 指标字段
+numbers 是 Long 类型，SQL 中不带引号，如 `WHERE numbers > 0`
+
+### 时间格式
+保持原始 8 位（天如20260601）或 10 位（小时如2026060110），不要转成日期格式
+
+### 防注入
+不要在 SQL 中拼接用户输入的原始内容，只用作字段值
 
 ## 返回格式
 
@@ -45,7 +54,7 @@
 
 ```json
 {
-  "sql": "SELECT timeinfo, numbers FROM OrderTide WHERE timeinfo BETWEEN '20260623' AND '20260629' ORDER BY timeinfo ASC",
+  "sql": "SELECT timeinfo, numbers FROM OrderTide WHERE timeinfo BETWEEN '20260623' AND '20260629' ORDER BY timeinfo ASC LIMIT 7",
   "chartType": "line",
   "title": "最近7天订单量趋势",
   "xAxis": "timeinfo",
@@ -56,10 +65,10 @@
 ```
 
 ### chartType 可选值
-- **line**：趋势折线图（适用于时间序列，如"每天订单量趋势"）
-- **bar**：柱状图（适用于对比，如"各产品类目成交额"）
-- **pie**：饼图（适用于占比，如"各版本占比"）
-- **table**：纯表格（适用于明细数据）
+- **line**：趋势折线图（时间序列，如每天订单量趋势）
+- **bar**：柱状图（对比，如各产品类目成交额）
+- **pie**：饼图（占比，如各版本占比）
+- **table**：纯表格（明细数据）
 
 ### 图表选择规则
 - 问趋势/走势 → line
@@ -67,9 +76,8 @@
 - 问占比/比例 → pie
 - 问明细/列表 → table
 
-## SQL 校验
-SQL 必须满足：
+## SQL 校验（必须满足）
 - 以 SELECT 开头
-- 包含 LIMIT（最大 1000）
+- **必须包含 LIMIT**
 - 不含 DROP/DELETE/INSERT/UPDATE/ALTER 等危险操作
 - 查询的表必须在 schema 中定义
