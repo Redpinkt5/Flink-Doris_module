@@ -161,6 +161,8 @@ public class AiService {
             JsonObject message = choice.getAsJsonObject().getAsJsonObject("message");
             String content = message.get("content").getAsString().trim();
 
+            logger.info("LLM raw response:\n{}", content);
+
             // 尝试解析 JSON 返回
             return parseLlmResponse(content);
 
