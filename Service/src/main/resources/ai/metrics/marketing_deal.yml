@@ -1,3 +1,4 @@
+# 营销成交语义指标：用于识别“营销成交/大促成交”类问题，引导 LLM 使用 MarketingDealhuodong 表。
 name: marketing_deal
 displayName: 营销成交单数
 description: 营销活动成交订单数

@@ -46,6 +46,8 @@ public class AiPromptBuilder {
         }
         String schemaContent = schemaConfig.getTableSchemaForPrompt();
 
+        // LLM 没有当前时间概念，预计算常用日期/小时占位符注入 Prompt，
+        // 避免生成超出数据范围或未来日期的 SQL。
         LocalDate today = LocalDate.now();
         String currentDate = today.format(DAY_FMT);
         String yesterday = today.minusDays(1).format(DAY_FMT);
@@ -67,6 +69,7 @@ public class AiPromptBuilder {
     }
 
     public String buildSystemPrompt(String question) {
+        // 问题进来后先做语义层匹配和 RAG 检索，再把结果拼进 system prompt。
         List<MetricMatchResult> matches = metricSemanticParser != null
                 ? metricSemanticParser.parse(question)
                 : Collections.emptyList();

@@ -1,3 +1,4 @@
+# 订单量语义指标：用于识别“订单量/订单数/成交数量”类问题，引导 LLM 使用 OrderTide 表。
 name: order_count
 displayName: 订单量
 description: 各产品类型订单成交数量趋势

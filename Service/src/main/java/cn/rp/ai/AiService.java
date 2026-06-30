@@ -152,6 +152,7 @@ public class AiService {
             example.setIsSuccess(1);
 
             if (matches != null && !matches.isEmpty()) {
+                // 历史库只记录置信度最高的命中指标，用于后续 RAG 相似问题推荐。
                 example.setMatchedMetrics(matches.get(0).getMetric().getName());
             }
 

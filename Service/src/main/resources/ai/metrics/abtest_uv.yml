@@ -1,3 +1,4 @@
+# ABTest UV 语义指标：用于识别“ABTest 独立访客/UV”类问题，引导 LLM 使用 AbTestUv 表。
 name: abtest_uv
 displayName: ABTest UV
 description: AB测试独立访客数

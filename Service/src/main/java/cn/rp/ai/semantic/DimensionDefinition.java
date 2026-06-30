@@ -1,5 +1,8 @@
 package cn.rp.ai.semantic;
 
+/**
+ * 指标下钻维度定义，对应 schema.yaml 中的维度字段。
+ */
 public class DimensionDefinition {
     private String name;
     private String displayName;

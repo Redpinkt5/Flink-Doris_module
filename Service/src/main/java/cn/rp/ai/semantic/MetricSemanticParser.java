@@ -35,6 +35,8 @@ public class MetricSemanticParser {
     }
 
     private void loadMetrics() {
+        // 开发期优先从文件系统加载，修改 yml 后无需重启即可生效；
+        // 生产打包成 jar 后回退到 classpath 读取。
         Path dir = Paths.get("src/main/resources/ai/metrics");
         if (Files.exists(dir) && Files.isDirectory(dir)) {
             try (Stream<Path> paths = Files.list(dir)) {
@@ -93,6 +95,8 @@ public class MetricSemanticParser {
 
     private double calculateScore(String question, MetricDefinition metric) {
         double score = 0;
+        // 显示名命中权重最高，因为用户通常按业务口语提问；
+        // supports 次之，用于捕获同义问法；name/description 兜底。
         score += countMatches(question, metric.getName());
         score += countMatches(question, metric.getDisplayName()) * 2;
         score += countMatches(question, metric.getDescription());
@@ -123,6 +127,7 @@ public class MetricSemanticParser {
             return "（未命中任何预定义指标，请根据 schema 推断）";
         }
         StringBuilder sb = new StringBuilder();
+        // 只取 TopK，避免 Prompt 过长导致 LLM 注意力分散或 token 超限。
         int limit = Math.min(topK, matches.size());
         for (int i = 0; i < limit; i++) {
             MetricDefinition m = matches.get(i).getMetric();

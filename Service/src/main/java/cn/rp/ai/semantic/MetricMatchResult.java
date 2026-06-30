@@ -1,5 +1,8 @@
 package cn.rp.ai.semantic;
 
+/**
+ * 问题与语义指标的匹配结果，按 score 降序后取 TopK 注入 Prompt。
+ */
 public class MetricMatchResult {
     private MetricDefinition metric;
     private double score;

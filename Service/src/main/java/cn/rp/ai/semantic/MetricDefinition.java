@@ -2,6 +2,10 @@ package cn.rp.ai.semantic;
 
 import java.util.List;
 
+/**
+ * YAML 语义指标定义。
+ * 每个实例对应 ai/metrics/*.yml 中的一条业务指标，用于将自然语言问题映射到表/聚合/维度。
+ */
 public class MetricDefinition {
     private String name;
     private String displayName;
