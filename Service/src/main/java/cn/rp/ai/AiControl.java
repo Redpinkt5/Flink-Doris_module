@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * AI 看板问答接口
- * 提供自然语言查询入口
+ * 提供自然语言查询入口，支持跨域调用（方便 Vite 前端开发环境直连）
  */
 @RestController
 @CrossOrigin

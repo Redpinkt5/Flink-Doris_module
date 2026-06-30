@@ -18,13 +18,13 @@ public class AiSqlValidator {
     @Autowired
     private AiSchemaConfig schemaConfig;
 
-    // 允许的 SQL 关键字
+    // 允许的 SQL 关键字（预留白名单，当前主要依赖 BLOCKED_KEYWORDS 做黑名单拦截）
     private static final Set<String> ALLOWED_KEYWORDS = new HashSet<>();
-    // 禁止的 SQL 关键字
+    // 禁止的 SQL 关键字：任何写操作、权限变更、执行类命令都不允许
     private static final Set<String> BLOCKED_KEYWORDS = new HashSet<>();
-    // 允许的表名（从 schema 中自动获取）
+    // 允许的表名（从 schema 中自动获取），防止 LLM 捏造表名
     private final Set<String> allowedTables = new HashSet<>();
-    // 已知的危险 SQL 模式
+    // 已知的危险 SQL 模式，先做快速正则拦截，再用单词边界精确匹配复核
     private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
             ".*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE|GRANT|REVOKE|EXEC|EXECUTE|SHUTDOWN).*",
             Pattern.CASE_INSENSITIVE
@@ -143,8 +143,9 @@ public class AiSqlValidator {
     }
 
     private boolean containsAllowedTable(String sql) {
+        // 启动时若未注入 schema 表名，则跳过表白名单检查，由 SELECT-only 和黑名单兜底安全
         if (allowedTables.isEmpty()) {
-            return true; // 如果没有配置表白名单，放行（安全由其他规则兜底）
+            return true;
         }
         String upperSql = sql.toUpperCase();
         for (String table : allowedTables) {

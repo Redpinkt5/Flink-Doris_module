@@ -1,5 +1,9 @@
 package cn.rp.ai.rag;
 
+/**
+ * RAG 知识库中的历史问答示例。
+ * 记录用户问题、命中指标、生成的 SQL 及图表配置，用于相似问题召回。
+ */
 public class QAExample {
     private Long id;
     private String question;
