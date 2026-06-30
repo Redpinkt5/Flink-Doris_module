@@ -1,0 +1,15 @@
+name: order_count
+displayName: 订单量
+description: 各产品类型订单成交数量趋势
+table: OrderTide
+aggregation: SUM(numbers)
+timeDimension: timeinfo
+defaultTimeRange: 7d
+dimensions:
+  - name: productypeid
+    displayName: 产品类型
+    type: Long
+supports:
+  - 最近7天订单量
+  - 按产品类型看订单量
+  - 订单量趋势

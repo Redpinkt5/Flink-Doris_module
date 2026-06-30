@@ -1,0 +1,21 @@
+name: abtest_uv
+displayName: ABTest UV
+description: AB测试独立访客数
+table: AbTestUv
+aggregation: SUM(numbers)
+timeDimension: timeinfo
+defaultTimeRange: 7d
+dimensions:
+  - name: testFlag
+    displayName: 实验版本
+    type: Integer
+  - name: productypeid
+    displayName: 产品类型
+    type: Long
+  - name: productypeleeave
+    displayName: 产品等级
+    type: Integer
+supports:
+  - 昨天ABTest UV
+  - 最近7天ABTest UV
+  - 按实验版本看UV

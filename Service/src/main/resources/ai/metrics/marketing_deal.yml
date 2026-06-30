@@ -1,0 +1,14 @@
+name: marketing_deal
+displayName: 营销成交单数
+description: 营销活动成交订单数
+table: MarketingDealhuodong
+aggregation: SUM(numbers)
+timeDimension: timeinfo
+defaultTimeRange: 7d
+dimensions:
+  - name: huodongid
+    displayName: 大促活动ID
+    type: Long
+supports:
+  - 最近7天营销成交
+  - 大促成交单数
