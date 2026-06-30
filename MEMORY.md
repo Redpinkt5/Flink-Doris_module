@@ -1,6 +1,4 @@
-# AI Memory Index
-
-- [user](memory/user.md) — 用户角色与偏好
-- [feedback](memory/feedback.md) — 协作规则与反馈
-- [project](memory/project.md) — 项目当前状态与进度
-- [reference](memory/reference.md) — 外部系统引用
+- [Redpink 用户画像](memory/user.md) — 独立负责 AnalySystem 大数据实时分析项目
+- [协作风格反馈](memory/feedback.md) — 不要静默做事、简洁汇报
+- [项目当前状态](memory/project.md) — 记忆系统注入完成
+- [外部系统引用](memory/reference.md) — 监控面板等外部资源占位
