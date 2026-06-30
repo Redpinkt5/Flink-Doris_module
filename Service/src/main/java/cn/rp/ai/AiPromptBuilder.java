@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -66,20 +67,23 @@ public class AiPromptBuilder {
     }
 
     public String buildSystemPrompt(String question) {
-        if (metricSemanticParser == null || ragRetriever == null) {
-            return buildSystemPrompt()
-                    .replace("{metric_content}", "（未命中任何预定义指标，请根据 schema 推断）")
-                    .replace("{rag_examples}", "（暂无历史相似问题）");
-        }
-        List<MetricMatchResult> matches = metricSemanticParser.parse(question);
-        List<QAExample> examples = ragRetriever.retrieve(question, DEFAULT_TOP_K);
+        List<MetricMatchResult> matches = metricSemanticParser != null
+                ? metricSemanticParser.parse(question)
+                : Collections.emptyList();
+        List<QAExample> examples = ragRetriever != null
+                ? ragRetriever.retrieve(question, DEFAULT_TOP_K)
+                : Collections.emptyList();
         return buildSystemPrompt(matches, examples);
     }
 
     public String buildSystemPrompt(List<MetricMatchResult> matches, List<QAExample> examples) {
         String basePrompt = buildSystemPrompt();
-        String metricContent = metricSemanticParser.formatForPrompt(matches, DEFAULT_TOP_K);
-        String ragExamples = ragRetriever.formatForPrompt(examples);
+        String metricContent = metricSemanticParser != null
+                ? metricSemanticParser.formatForPrompt(matches, DEFAULT_TOP_K)
+                : "（未命中任何预定义指标，请根据 schema 推断）";
+        String ragExamples = ragRetriever != null
+                ? ragRetriever.formatForPrompt(examples)
+                : "（暂无历史相似问题）";
         return basePrompt
                 .replace("{metric_content}", metricContent)
                 .replace("{rag_examples}", ragExamples);
@@ -97,7 +101,7 @@ public class AiPromptBuilder {
         this.ragRetriever = ragRetriever;
     }
 
-    void setSchemaConfig(cn.rp.config.AiSchemaConfig schemaConfig) {
+    void setSchemaConfig(AiSchemaConfig schemaConfig) {
         this.schemaConfig = schemaConfig;
     }
 

@@ -3,11 +3,13 @@ package cn.rp.ai;
 import cn.rp.ai.rag.QAExample;
 import cn.rp.ai.rag.RagRetriever;
 import cn.rp.ai.semantic.MetricDefinition;
+import cn.rp.ai.semantic.MetricMatchResult;
 import cn.rp.ai.semantic.MetricSemanticParser;
 import cn.rp.config.AiSchemaConfig;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -52,6 +54,56 @@ public class AiPromptBuilderTest {
         assertTrue("prompt 应包含指标内容", prompt.contains("指标：订单量(order_count)"));
         assertTrue("prompt 应包含历史问题", prompt.contains("问题：最近7天订单量"));
         assertTrue("prompt 应包含历史 SQL", prompt.contains("SELECT timeinfo, SUM(numbers) FROM OrderTide"));
+    }
+
+    @Test
+    public void buildSystemPrompt_withListOverload_shouldInjectProvidedMatchesAndExamples() {
+        MetricDefinition metric = new MetricDefinition();
+        metric.setName("order_count");
+        metric.setDisplayName("订单量");
+        metric.setTable("OrderTide");
+        metric.setAggregation("SUM(numbers)");
+        metric.setTimeDimension("timeinfo");
+        metric.setDefaultTimeRange("7d");
+
+        MetricSemanticParser parser = new MetricSemanticParser(Arrays.asList(metric));
+
+        QAExample example = new QAExample();
+        example.setQuestion("直接传入的示例");
+        example.setGeneratedSql("SELECT 1");
+
+        AiPromptBuilder builder = createBuilder();
+        builder.setMetricSemanticParser(parser);
+        builder.setRagRetriever(new RagRetriever());
+
+        List<MetricMatchResult> matches = parser.parse("最近7天订单量");
+        List<QAExample> examples = Arrays.asList(example);
+
+        String prompt = builder.buildSystemPrompt(matches, examples);
+        assertTrue("prompt 应包含指标内容", prompt.contains("指标：订单量(order_count)"));
+        assertTrue("prompt 应包含传入的示例问题", prompt.contains("问题：直接传入的示例"));
+        assertTrue("prompt 应包含传入的示例 SQL", prompt.contains("SELECT 1"));
+    }
+
+    @Test
+    public void buildSystemPrompt_shouldUsePartialDependencyWhenOnlyMetricAvailable() {
+        MetricDefinition metric = new MetricDefinition();
+        metric.setName("order_count");
+        metric.setDisplayName("订单量");
+        metric.setTable("OrderTide");
+        metric.setAggregation("SUM(numbers)");
+        metric.setTimeDimension("timeinfo");
+        metric.setDefaultTimeRange("7d");
+
+        MetricSemanticParser parser = new MetricSemanticParser(Arrays.asList(metric));
+
+        AiPromptBuilder builder = createBuilder();
+        builder.setMetricSemanticParser(parser);
+        builder.setRagRetriever(null);
+
+        String prompt = builder.buildSystemPrompt("最近7天订单量");
+        assertTrue("有 metric 依赖时应注入指标内容", prompt.contains("指标：订单量(order_count)"));
+        assertTrue("无 rag 依赖时应显示降级提示", prompt.contains("（暂无历史相似问题）"));
     }
 
     @Test
