@@ -1,5 +1,10 @@
 package cn.rp.ai;
 
+import cn.rp.ai.rag.QAExample;
+import cn.rp.ai.rag.RagRepository;
+import cn.rp.ai.rag.RagRetriever;
+import cn.rp.ai.semantic.MetricMatchResult;
+import cn.rp.ai.semantic.MetricSemanticParser;
 import cn.rp.config.AiSchemaConfig;
 import cn.rp.util.DorisDBUtil;
 import com.google.gson.Gson;
@@ -51,6 +56,15 @@ public class AiService {
     @Autowired
     private AiSchemaConfig schemaConfig;
 
+    @Autowired
+    private MetricSemanticParser metricSemanticParser;
+
+    @Autowired
+    private RagRetriever ragRetriever;
+
+    @Autowired
+    private RagRepository ragRepository;
+
     /**
      * 处理用户自然语言查询
      */
@@ -61,7 +75,7 @@ public class AiService {
 
         try {
             // 1. 构建 Prompt
-            String systemPrompt = promptBuilder.buildSystemPrompt();
+            String systemPrompt = promptBuilder.buildSystemPrompt(question);
             String userPrompt = promptBuilder.buildUserPrompt(question);
 
             // 2. 调用 DeepSeek
@@ -99,11 +113,38 @@ public class AiService {
             result.setxAxisLabel(llmResponse.xAxisLabel);
             result.setyAxisLabel(llmResponse.yAxisLabel);
 
+            // 异步写入 RAG 历史库
+            saveToHistory(question, result);
+
             return result;
 
         } catch (Exception e) {
             logger.error("AI query failed", e);
             return AiQueryResult.fail("查询失败: " + e.getMessage());
+        }
+    }
+
+    private void saveToHistory(String question, AiQueryResult result) {
+        if (!result.isSuccess() || ragRepository == null) {
+            return;
+        }
+        try {
+            QAExample example = new QAExample();
+            example.setQuestion(question);
+            example.setGeneratedSql(result.getSql());
+            example.setChartType(result.getChartType());
+            example.setxAxisField(result.getxAxisField());
+            example.setyAxisField(result.getyAxisField());
+            example.setIsSuccess(1);
+
+            List<MetricMatchResult> matches = metricSemanticParser != null ? metricSemanticParser.parse(question) : Collections.emptyList();
+            if (matches != null && !matches.isEmpty()) {
+                example.setMatchedMetrics(matches.get(0).getMetric().getName());
+            }
+
+            new Thread(() -> ragRepository.save(example)).start();
+        } catch (Exception e) {
+            logger.warn("Failed to save QA history", e);
         }
     }
 
