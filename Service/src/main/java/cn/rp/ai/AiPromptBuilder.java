@@ -1,7 +1,5 @@
 package cn.rp.ai;
 
-import cn.rp.ai.rag.QAExample;
-import cn.rp.ai.rag.RagRetriever;
 import cn.rp.ai.semantic.MetricMatchResult;
 import cn.rp.ai.semantic.MetricSemanticParser;
 import cn.rp.config.AiSchemaConfig;
@@ -21,7 +19,7 @@ import java.util.List;
 
 /**
  * AI Prompt 构建器
- * 加载 prompt_template.txt 并注入 schema 内容及动态日期
+ * 加载 prompt_template.txt 并注入 schema、语义指标及动态日期
  */
 @Component
 public class AiPromptBuilder {
@@ -34,9 +32,6 @@ public class AiPromptBuilder {
 
     @Autowired
     private MetricSemanticParser metricSemanticParser;
-
-    @Autowired
-    private RagRetriever ragRetriever;
 
     private String systemPromptTemplate;
 
@@ -69,27 +64,18 @@ public class AiPromptBuilder {
     }
 
     public String buildSystemPrompt(String question) {
-        // 问题进来后先做语义层匹配和 RAG 检索，再把结果拼进 system prompt。
         List<MetricMatchResult> matches = metricSemanticParser != null
                 ? metricSemanticParser.parse(question)
                 : Collections.emptyList();
-        List<QAExample> examples = ragRetriever != null
-                ? ragRetriever.retrieve(question, DEFAULT_TOP_K)
-                : Collections.emptyList();
-        return buildSystemPrompt(matches, examples);
+        return buildSystemPrompt(matches);
     }
 
-    public String buildSystemPrompt(List<MetricMatchResult> matches, List<QAExample> examples) {
+    public String buildSystemPrompt(List<MetricMatchResult> matches) {
         String basePrompt = buildSystemPrompt();
         String metricContent = metricSemanticParser != null
                 ? metricSemanticParser.formatForPrompt(matches, DEFAULT_TOP_K)
                 : "（未命中任何预定义指标，请根据 schema 推断）";
-        String ragExamples = ragRetriever != null
-                ? ragRetriever.formatForPrompt(examples)
-                : "（暂无历史相似问题）";
-        return basePrompt
-                .replace("{metric_content}", metricContent)
-                .replace("{rag_examples}", ragExamples);
+        return basePrompt.replace("{metric_content}", metricContent);
     }
 
     public String buildUserPrompt(String question) {
@@ -98,10 +84,6 @@ public class AiPromptBuilder {
 
     void setMetricSemanticParser(MetricSemanticParser metricSemanticParser) {
         this.metricSemanticParser = metricSemanticParser;
-    }
-
-    void setRagRetriever(RagRetriever ragRetriever) {
-        this.ragRetriever = ragRetriever;
     }
 
     void setSchemaConfig(AiSchemaConfig schemaConfig) {

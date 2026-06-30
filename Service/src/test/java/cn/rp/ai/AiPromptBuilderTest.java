@@ -1,7 +1,5 @@
 package cn.rp.ai;
 
-import cn.rp.ai.rag.QAExample;
-import cn.rp.ai.rag.RagRetriever;
 import cn.rp.ai.semantic.MetricDefinition;
 import cn.rp.ai.semantic.MetricMatchResult;
 import cn.rp.ai.semantic.MetricSemanticParser;
@@ -23,7 +21,7 @@ public class AiPromptBuilderTest {
     }
 
     @Test
-    public void buildSystemPrompt_shouldInjectMetricAndRagContent() {
+    public void buildSystemPrompt_shouldInjectMetricContent() {
         MetricDefinition metric = new MetricDefinition();
         metric.setName("order_count");
         metric.setDisplayName("订单量");
@@ -34,30 +32,15 @@ public class AiPromptBuilderTest {
 
         MetricSemanticParser parser = new MetricSemanticParser(Arrays.asList(metric));
 
-        QAExample example = new QAExample();
-        example.setQuestion("最近7天订单量");
-        example.setGeneratedSql("SELECT timeinfo, SUM(numbers) FROM OrderTide");
-        example.setChartType("line");
-
-        RagRetriever retriever = new RagRetriever() {
-            @Override
-            public List<QAExample> retrieve(String question, int topK) {
-                return Arrays.asList(example);
-            }
-        };
-
         AiPromptBuilder builder = createBuilder();
         builder.setMetricSemanticParser(parser);
-        builder.setRagRetriever(retriever);
 
         String prompt = builder.buildSystemPrompt("最近7天订单量");
         assertTrue("prompt 应包含指标内容", prompt.contains("指标：订单量(order_count)"));
-        assertTrue("prompt 应包含历史问题", prompt.contains("问题：最近7天订单量"));
-        assertTrue("prompt 应包含历史 SQL", prompt.contains("SELECT timeinfo, SUM(numbers) FROM OrderTide"));
     }
 
     @Test
-    public void buildSystemPrompt_withListOverload_shouldInjectProvidedMatchesAndExamples() {
+    public void buildSystemPrompt_withListOverload_shouldInjectProvidedMatches() {
         MetricDefinition metric = new MetricDefinition();
         metric.setName("order_count");
         metric.setDisplayName("订单量");
@@ -68,25 +51,17 @@ public class AiPromptBuilderTest {
 
         MetricSemanticParser parser = new MetricSemanticParser(Arrays.asList(metric));
 
-        QAExample example = new QAExample();
-        example.setQuestion("直接传入的示例");
-        example.setGeneratedSql("SELECT 1");
-
         AiPromptBuilder builder = createBuilder();
         builder.setMetricSemanticParser(parser);
-        builder.setRagRetriever(new RagRetriever());
 
         List<MetricMatchResult> matches = parser.parse("最近7天订单量");
-        List<QAExample> examples = Arrays.asList(example);
 
-        String prompt = builder.buildSystemPrompt(matches, examples);
+        String prompt = builder.buildSystemPrompt(matches);
         assertTrue("prompt 应包含指标内容", prompt.contains("指标：订单量(order_count)"));
-        assertTrue("prompt 应包含传入的示例问题", prompt.contains("问题：直接传入的示例"));
-        assertTrue("prompt 应包含传入的示例 SQL", prompt.contains("SELECT 1"));
     }
 
     @Test
-    public void buildSystemPrompt_shouldUsePartialDependencyWhenOnlyMetricAvailable() {
+    public void buildSystemPrompt_shouldUsePartialDependencyWhenMetricAvailable() {
         MetricDefinition metric = new MetricDefinition();
         metric.setName("order_count");
         metric.setDisplayName("订单量");
@@ -99,22 +74,18 @@ public class AiPromptBuilderTest {
 
         AiPromptBuilder builder = createBuilder();
         builder.setMetricSemanticParser(parser);
-        builder.setRagRetriever(null);
 
         String prompt = builder.buildSystemPrompt("最近7天订单量");
         assertTrue("有 metric 依赖时应注入指标内容", prompt.contains("指标：订单量(order_count)"));
-        assertTrue("无 rag 依赖时应显示降级提示", prompt.contains("（暂无历史相似问题）"));
     }
 
     @Test
     public void buildSystemPrompt_shouldFallbackWhenDependenciesMissing() {
         AiPromptBuilder builder = createBuilder();
         builder.setMetricSemanticParser(null);
-        builder.setRagRetriever(null);
 
         String prompt = builder.buildSystemPrompt("随便问个问题");
         assertTrue("无依赖时应返回基础 prompt", prompt.contains("## Schema"));
         assertTrue("无 metric 依赖时应显示降级提示", prompt.contains("（未命中任何预定义指标，请根据 schema 推断）"));
-        assertTrue("无 rag 依赖时应显示降级提示", prompt.contains("（暂无历史相似问题）"));
     }
 }

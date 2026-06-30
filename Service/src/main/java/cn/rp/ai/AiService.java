@@ -1,8 +1,5 @@
 package cn.rp.ai;
 
-import cn.rp.ai.rag.QAExample;
-import cn.rp.ai.rag.RagRepository;
-import cn.rp.ai.rag.RagRetriever;
 import cn.rp.ai.semantic.MetricMatchResult;
 import cn.rp.ai.semantic.MetricSemanticParser;
 import cn.rp.config.AiSchemaConfig;
@@ -14,9 +11,7 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -25,7 +20,7 @@ import java.util.*;
 
 /**
  * AI 问答服务核心
- * 编排：Prompt → DeepSeek LLM → SQL → Doris → 结果转换 + 图表配置
+ * 编排：语义解析 → Prompt → DeepSeek LLM → SQL 校验 → Doris → 结果转换 + 图表配置
  */
 @Service
 public class AiService {
@@ -61,16 +56,6 @@ public class AiService {
     @Autowired
     private MetricSemanticParser metricSemanticParser;
 
-    @Autowired
-    private RagRetriever ragRetriever;
-
-    @Autowired
-    private RagRepository ragRepository;
-
-    @Autowired
-    @Qualifier("aiHistoryTaskExecutor")
-    private TaskExecutor historyTaskExecutor;
-
     /**
      * 处理用户自然语言查询
      */
@@ -80,40 +65,37 @@ public class AiService {
         }
 
         try {
-            // 1. 语义解析与 RAG 检索
+            // 1. 语义解析：从问题中匹配预定义指标
             List<MetricMatchResult> matches = metricSemanticParser != null
                     ? metricSemanticParser.parse(question)
                     : Collections.emptyList();
-            List<QAExample> examples = ragRetriever != null
-                    ? ragRetriever.retrieve(question, 3)
-                    : Collections.emptyList();
 
             // 2. 构建 Prompt
-            String systemPrompt = promptBuilder.buildSystemPrompt(matches, examples);
+            String systemPrompt = promptBuilder.buildSystemPrompt(matches);
             String userPrompt = promptBuilder.buildUserPrompt(question);
 
-            // 2. 调用 DeepSeek
+            // 3. 调用 DeepSeek
             LlmResponse llmResponse = callDeepSeek(systemPrompt, userPrompt);
             if (llmResponse == null || llmResponse.sql == null || llmResponse.sql.trim().isEmpty()) {
                 return AiQueryResult.fail("AI 未能生成有效 SQL，请换个问法");
             }
 
-            // 3. 清理 SQL
+            // 4. 清理 SQL
             String sql = llmResponse.sql.trim().replaceAll("^```sql\\s*", "")
                     .replaceAll("^```\\s*", "").replaceAll("\\s*```$", "").trim();
 
-            // 4. 校验 SQL
+            // 5. 校验 SQL
             AiSqlValidator.ValidationResult validation = sqlValidator.validate(sql);
             if (!validation.isValid()) {
                 logger.warn("SQL validation failed: {} | SQL: {}", validation.getErrorMessage(), sql);
                 return AiQueryResult.fail("生成的 SQL 不符合安全规范: " + validation.getErrorMessage());
             }
 
-            // 5. 执行 SQL
+            // 6. 执行 SQL
             logger.info("Executing SQL: {}", sql);
             QueryResult queryResult = executeSql(sql);
 
-            // 6. 构建返回结果（含图表配置）
+            // 7. 构建返回结果（含图表配置）
             AiQueryResult result = new AiQueryResult();
             result.setSuccess(true);
             result.setSql(sql);
@@ -127,38 +109,11 @@ public class AiService {
             result.setxAxisLabel(llmResponse.xAxisLabel);
             result.setyAxisLabel(llmResponse.yAxisLabel);
 
-            // 异步写入 RAG 历史库
-            saveToHistory(question, result, matches);
-
             return result;
 
         } catch (Exception e) {
             logger.error("AI query failed", e);
             return AiQueryResult.fail("查询失败: " + e.getMessage());
-        }
-    }
-
-    private void saveToHistory(String question, AiQueryResult result, List<MetricMatchResult> matches) {
-        if (!result.isSuccess() || ragRepository == null) {
-            return;
-        }
-        try {
-            QAExample example = new QAExample();
-            example.setQuestion(question);
-            example.setGeneratedSql(result.getSql());
-            example.setChartType(result.getChartType());
-            example.setxAxisField(result.getxAxisField());
-            example.setyAxisField(result.getyAxisField());
-            example.setIsSuccess(1);
-
-            if (matches != null && !matches.isEmpty()) {
-                // 历史库只记录置信度最高的命中指标，用于后续 RAG 相似问题推荐。
-                example.setMatchedMetrics(matches.get(0).getMetric().getName());
-            }
-
-            historyTaskExecutor.execute(() -> ragRepository.save(example));
-        } catch (Exception e) {
-            logger.warn("Failed to save QA history", e);
         }
     }
 
