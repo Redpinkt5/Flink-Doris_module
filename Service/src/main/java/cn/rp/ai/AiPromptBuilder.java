@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,6 +27,7 @@ import java.util.List;
 public class AiPromptBuilder {
 
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final int DEFAULT_TOP_K = 3;
 
     @Autowired
     private AiSchemaConfig schemaConfig;
@@ -65,15 +67,15 @@ public class AiPromptBuilder {
     }
 
     public String buildSystemPrompt(String question) {
-        List<MetricMatchResult> matches = metricSemanticParser.parse(question);
-        List<QAExample> examples = ragRetriever.retrieve(question, 3);
+        List<MetricMatchResult> matches = metricSemanticParser != null ? metricSemanticParser.parse(question) : Collections.emptyList();
+        List<QAExample> examples = ragRetriever != null ? ragRetriever.retrieve(question, DEFAULT_TOP_K) : Collections.emptyList();
         return buildSystemPrompt(matches, examples);
     }
 
     public String buildSystemPrompt(List<MetricMatchResult> matches, List<QAExample> examples) {
         String basePrompt = buildSystemPrompt();
-        String metricContent = metricSemanticParser.formatForPrompt(matches, 3);
-        String ragExamples = ragRetriever.formatForPrompt(examples);
+        String metricContent = metricSemanticParser != null ? metricSemanticParser.formatForPrompt(matches, DEFAULT_TOP_K) : "（未命中任何预定义指标，请根据 schema 推断）";
+        String ragExamples = ragRetriever != null ? ragRetriever.formatForPrompt(examples) : "（暂无历史相似问题）";
         return basePrompt
                 .replace("{metric_content}", metricContent)
                 .replace("{rag_examples}", ragExamples);
@@ -81,6 +83,18 @@ public class AiPromptBuilder {
 
     public String buildUserPrompt(String question) {
         return "用户问题：" + question + "\n\n请将这个问题转换成 Doris SQL 查询，并返回图表配置。";
+    }
+
+    void setMetricSemanticParser(MetricSemanticParser metricSemanticParser) {
+        this.metricSemanticParser = metricSemanticParser;
+    }
+
+    void setRagRetriever(RagRetriever ragRetriever) {
+        this.ragRetriever = ragRetriever;
+    }
+
+    void setSchemaConfig(cn.rp.config.AiSchemaConfig schemaConfig) {
+        this.schemaConfig = schemaConfig;
     }
 
     private String loadTemplate() {
