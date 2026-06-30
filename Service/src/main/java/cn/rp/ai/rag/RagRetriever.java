@@ -1,5 +1,7 @@
 package cn.rp.ai.rag;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +10,8 @@ import java.util.List;
 
 @Component
 public class RagRetriever {
+
+    private static final Logger logger = LoggerFactory.getLogger(RagRetriever.class);
 
     @Autowired
     private RagRepository ragRepository;
@@ -23,6 +27,7 @@ public class RagRetriever {
             }
             return results;
         } catch (Exception e) {
+            logger.warn("RAG retrieval failed for question: {}", question, e);
             return Collections.emptyList();
         }
     }
@@ -33,8 +38,13 @@ public class RagRetriever {
         }
         StringBuilder sb = new StringBuilder();
         for (QAExample example : examples) {
-            sb.append("问题：").append(example.getQuestion()).append("\n");
-            sb.append("SQL：").append(example.getGeneratedSql()).append("\n");
+            String q = example.getQuestion();
+            String sql = example.getGeneratedSql();
+            if (q == null || sql == null) {
+                continue;
+            }
+            sb.append("问题：").append(q).append("\n");
+            sb.append("SQL：").append(sql).append("\n");
             if (example.getChartType() != null) {
                 sb.append("图表类型：").append(example.getChartType()).append("\n");
             }
