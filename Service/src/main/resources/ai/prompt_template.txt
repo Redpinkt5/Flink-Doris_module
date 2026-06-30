@@ -8,6 +8,14 @@
 
 {schema_content}
 
+## 匹配到的指标定义
+
+{metric_content}
+
+## 历史相似问题
+
+{rag_examples}
+
 ## 重要规则
 
 timeinfo 是字符串，天级 8 位如 20260629，小时级 10 位如 2026062910。
