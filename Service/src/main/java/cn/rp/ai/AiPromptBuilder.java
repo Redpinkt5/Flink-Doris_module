@@ -1,5 +1,9 @@
 package cn.rp.ai;
 
+import cn.rp.ai.rag.QAExample;
+import cn.rp.ai.rag.RagRetriever;
+import cn.rp.ai.semantic.MetricMatchResult;
+import cn.rp.ai.semantic.MetricSemanticParser;
 import cn.rp.config.AiSchemaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -12,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * AI Prompt 构建器
@@ -24,6 +29,12 @@ public class AiPromptBuilder {
 
     @Autowired
     private AiSchemaConfig schemaConfig;
+
+    @Autowired
+    private MetricSemanticParser metricSemanticParser;
+
+    @Autowired
+    private RagRetriever ragRetriever;
 
     private String systemPromptTemplate;
 
@@ -51,6 +62,21 @@ public class AiPromptBuilder {
                 .replace("{month_start}", today.withDayOfMonth(1).format(DAY_FMT))
                 .replace("{current_hour}", currentHour)
                 .replace("{hour_ago}", hourAgo);
+    }
+
+    public String buildSystemPrompt(String question) {
+        List<MetricMatchResult> matches = metricSemanticParser.parse(question);
+        List<QAExample> examples = ragRetriever.retrieve(question, 3);
+        return buildSystemPrompt(matches, examples);
+    }
+
+    public String buildSystemPrompt(List<MetricMatchResult> matches, List<QAExample> examples) {
+        String basePrompt = buildSystemPrompt();
+        String metricContent = metricSemanticParser.formatForPrompt(matches, 3);
+        String ragExamples = ragRetriever.formatForPrompt(examples);
+        return basePrompt
+                .replace("{metric_content}", metricContent)
+                .replace("{rag_examples}", ragExamples);
     }
 
     public String buildUserPrompt(String question) {
