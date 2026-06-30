@@ -14,7 +14,9 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -65,6 +67,10 @@ public class AiService {
     @Autowired
     private RagRepository ragRepository;
 
+    @Autowired
+    @Qualifier("aiHistoryTaskExecutor")
+    private TaskExecutor historyTaskExecutor;
+
     /**
      * 处理用户自然语言查询
      */
@@ -74,8 +80,16 @@ public class AiService {
         }
 
         try {
-            // 1. 构建 Prompt
-            String systemPrompt = promptBuilder.buildSystemPrompt(question);
+            // 1. 语义解析与 RAG 检索
+            List<MetricMatchResult> matches = metricSemanticParser != null
+                    ? metricSemanticParser.parse(question)
+                    : Collections.emptyList();
+            List<QAExample> examples = ragRetriever != null
+                    ? ragRetriever.retrieve(question, 3)
+                    : Collections.emptyList();
+
+            // 2. 构建 Prompt
+            String systemPrompt = promptBuilder.buildSystemPrompt(matches, examples);
             String userPrompt = promptBuilder.buildUserPrompt(question);
 
             // 2. 调用 DeepSeek
@@ -114,7 +128,7 @@ public class AiService {
             result.setyAxisLabel(llmResponse.yAxisLabel);
 
             // 异步写入 RAG 历史库
-            saveToHistory(question, result);
+            saveToHistory(question, result, matches);
 
             return result;
 
@@ -124,7 +138,7 @@ public class AiService {
         }
     }
 
-    private void saveToHistory(String question, AiQueryResult result) {
+    private void saveToHistory(String question, AiQueryResult result, List<MetricMatchResult> matches) {
         if (!result.isSuccess() || ragRepository == null) {
             return;
         }
@@ -137,12 +151,11 @@ public class AiService {
             example.setyAxisField(result.getyAxisField());
             example.setIsSuccess(1);
 
-            List<MetricMatchResult> matches = metricSemanticParser != null ? metricSemanticParser.parse(question) : Collections.emptyList();
             if (matches != null && !matches.isEmpty()) {
                 example.setMatchedMetrics(matches.get(0).getMetric().getName());
             }
 
-            new Thread(() -> ragRepository.save(example)).start();
+            historyTaskExecutor.execute(() -> ragRepository.save(example));
         } catch (Exception e) {
             logger.warn("Failed to save QA history", e);
         }
