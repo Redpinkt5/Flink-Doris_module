@@ -8,7 +8,7 @@ import cn.rp.config.AiSchemaConfig;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -31,7 +31,18 @@ public class AiPromptBuilderTest {
         metric.setDefaultTimeRange("7d");
 
         MetricSemanticParser parser = new MetricSemanticParser(Arrays.asList(metric));
-        RagRetriever retriever = new RagRetriever();
+
+        QAExample example = new QAExample();
+        example.setQuestion("最近7天订单量");
+        example.setGeneratedSql("SELECT timeinfo, SUM(numbers) FROM OrderTide");
+        example.setChartType("line");
+
+        RagRetriever retriever = new RagRetriever() {
+            @Override
+            public List<QAExample> retrieve(String question, int topK) {
+                return Arrays.asList(example);
+            }
+        };
 
         AiPromptBuilder builder = createBuilder();
         builder.setMetricSemanticParser(parser);
@@ -39,7 +50,8 @@ public class AiPromptBuilderTest {
 
         String prompt = builder.buildSystemPrompt("最近7天订单量");
         assertTrue("prompt 应包含指标内容", prompt.contains("指标：订单量(order_count)"));
-        assertTrue("prompt 应包含 RAG 占位符的默认提示", prompt.contains("（暂无历史相似问题）"));
+        assertTrue("prompt 应包含历史问题", prompt.contains("问题：最近7天订单量"));
+        assertTrue("prompt 应包含历史 SQL", prompt.contains("SELECT timeinfo, SUM(numbers) FROM OrderTide"));
     }
 
     @Test
