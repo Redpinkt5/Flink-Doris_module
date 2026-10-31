@@ -14,5 +14,4 @@ public class SpringBootRegister {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootRegister.class, args);
     }
-
 }
