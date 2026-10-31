@@ -36,3 +36,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
+# 个人简历（隐私信息，不入库不推送）
+doc/resume_text.txt
