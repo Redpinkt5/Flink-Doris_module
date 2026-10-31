@@ -3,20 +3,22 @@ package cn.rp.entity;
 /**
  * @author Rp
  * @date 2026.6.17 20:46
+ * 订单趋势
+ * 订单类目趋势
  **/
-public class TerminalInfoResult {
+public class OrderAnalyInfoResult {
     private String timeInfo;
     private long numbers;
-    private int deviceType;
+    private long productypeid;
     private String groupField;
 
-    public TerminalInfoResult() {
+    public OrderAnalyInfoResult() {
     }
 
-    public TerminalInfoResult(String timeInfo, long numbers, int deviceType, String groupField) {
+    public OrderAnalyInfoResult(String timeInfo, long numbers, long productypeid, String groupField) {
         this.timeInfo = timeInfo;
         this.numbers = numbers;
-        this.deviceType = deviceType;
+        this.productypeid = productypeid;
         this.groupField = groupField;
     }
 
@@ -54,18 +56,18 @@ public class TerminalInfoResult {
 
     /**
      * 获取
-     * @return deviceType
+     * @return productypeid
      */
-    public int getDeviceType() {
-        return deviceType;
+    public long getProductypeid() {
+        return productypeid;
     }
 
     /**
      * 设置
-     * @param deviceType
+     * @param productypeid
      */
-    public void setDeviceType(int deviceType) {
-        this.deviceType = deviceType;
+    public void setProductypeid(long productypeid) {
+        this.productypeid = productypeid;
     }
 
     /**
@@ -85,6 +87,10 @@ public class TerminalInfoResult {
     }
 
     public String toString() {
-        return "TerminalInfoResult{timeInfo = " + timeInfo + ", numbers = " + numbers + ", deviceType = " + deviceType + ", groupField = " + groupField + "}";
+        return "OrderAnalyInfoResult{timeInfo = " + timeInfo + ", numbers = " + numbers + ", productypeid = " + productypeid + ", groupField = " + groupField + "}";
     }
+//    private long tuangouid;
+//    private long miaoshaid;
+//    private long hongbaoid;
+
 }

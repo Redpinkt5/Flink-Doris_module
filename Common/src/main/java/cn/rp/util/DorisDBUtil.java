@@ -1,11 +1,10 @@
 package cn.rp.util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Map;
 import java.util.Set;
+
+import static java.lang.Class.forName;
 
 /**
  * @author Rp
@@ -38,7 +37,7 @@ public class DorisDBUtil {
             System.out.println("dorisDB 插入sql = " + resultsql);
 
 
-            Connection connection = getConnection("jdbc:mysql://192.168.88.101:9030/dorisTest", driverClassName, username, password);
+            Connection connection = getConnection("jdbc:mysql://192.168.88.101:9030/hadoop_db", driverClassName, username, password);
 
             Statement statement = connection.createStatement();
             statement.execute(resultsql);
@@ -49,7 +48,7 @@ public class DorisDBUtil {
 
     public static Connection getConnection(String address, String driverClassName, String username, String password) {
         try {
-            Class.forName(driverClassName);
+            forName(driverClassName);
             Connection connection = DriverManager.getConnection(address, username, password);
             return connection;
         } catch (Exception e) {
@@ -57,5 +56,28 @@ public class DorisDBUtil {
 
         }
         return null;
+    }
+
+    public static Connection getConnection(String address){
+        String driverClassName = "com.mysql.cj.jdbc.Driver";
+        String username = "hadoop";
+        String password = "hadoop";
+        return getConnection(address, driverClassName, username, password);
+    }
+
+    public static ResultSet quereBySql(String sql) throws SQLException {
+        String address = "jdbc:mysql://192.168.88.101:9030/hadoop_db";
+        String driverClassName = "com.mysql.cj.jdbc.Driver";
+        String username = "hadoop";
+        String password = "hadoop";
+        return quereBySql(address, driverClassName, username, password, sql);
+    }
+
+    public static ResultSet quereBySql(String address, String driverClassName, String username, String password, String sql) throws SQLException {
+        Connection connection = getConnection(address, driverClassName, username, password);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        return resultSet;
+
     }
 }

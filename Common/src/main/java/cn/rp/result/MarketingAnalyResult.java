@@ -1,7 +1,5 @@
 package cn.rp.result;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,15 +9,15 @@ import java.util.Map;
  * @author Rp
  * @date 2026.6.12 14:45
  **/
-public class MarkettingAnalyResult {
+public class MarketingAnalyResult {
     private List<String> xList = new ArrayList<String>();
     private List<Map<String, Object>> yData = new ArrayList<Map<String, Object>>();
 
 
-    public MarkettingAnalyResult() {
+    public MarketingAnalyResult() {
     }
 
-    public MarkettingAnalyResult(List<String> xList, List<Map<String, Object>> yData) {
+    public MarketingAnalyResult(List<String> xList, List<Map<String, Object>> yData) {
         this.xList = xList;
         this.yData = yData;
     }
@@ -57,7 +55,7 @@ public class MarkettingAnalyResult {
     }
 
     public String toString() {
-        return "MarkettingAnalyResult{xList = " + xList + ", yData = " + yData + "}";
+        return "MarketingAnalyResult{xList = " + xList + ", yData = " + yData + "}";
     }
 }
 

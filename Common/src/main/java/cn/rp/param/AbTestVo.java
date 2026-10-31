@@ -4,15 +4,15 @@ package cn.rp.param;
  * @author Rp
  * @date 2026.6.13 17:07
  **/
-public class AbTerstVo {
+public class AbTestVo {
     private String timedate;
     private String versiontype;
 
 
-    public AbTerstVo() {
+    public AbTestVo() {
     }
 
-    public AbTerstVo(String timedate, String versiontype) {
+    public AbTestVo(String timedate, String versiontype) {
         this.timedate = timedate;
         this.versiontype = versiontype;
     }
@@ -50,6 +50,6 @@ public class AbTerstVo {
     }
 
     public String toString() {
-        return "AbTerstVo{timedate = " + timedate + ", versiontype = " + versiontype + "}";
+        return "AbTestVo{timedate = " + timedate + ", versiontype = " + versiontype + "}";
     }
 }

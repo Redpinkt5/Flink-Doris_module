@@ -10,17 +10,20 @@ public class AbTestPvResult {
     private long productypeid;
     private long userid;
     private long productypeleeave;//用户id
+    private int testFlag;
     private String groupField;//分组条件
+
 
     public AbTestPvResult() {
     }
 
-    public AbTestPvResult(String timeinfo, long numbers, long productypeid, long userid, long productypeleeave, String groupField) {
+    public AbTestPvResult(String timeinfo, long numbers, long productypeid, long userid, long productypeleeave, int testFlag, String groupField) {
         this.timeinfo = timeinfo;
         this.numbers = numbers;
         this.productypeid = productypeid;
         this.userid = userid;
         this.productypeleeave = productypeleeave;
+        this.testFlag = testFlag;
         this.groupField = groupField;
     }
 
@@ -106,6 +109,22 @@ public class AbTestPvResult {
 
     /**
      * 获取
+     * @return testFlag
+     */
+    public int getTestFlag() {
+        return testFlag;
+    }
+
+    /**
+     * 设置
+     * @param testFlag
+     */
+    public void setTestFlag(int testFlag) {
+        this.testFlag = testFlag;
+    }
+
+    /**
+     * 获取
      * @return groupField
      */
     public String getGroupField() {
@@ -121,6 +140,6 @@ public class AbTestPvResult {
     }
 
     public String toString() {
-        return "AbTestPvResult{timeinfo = " + timeinfo + ", numbers = " + numbers + ", productypeid = " + productypeid + ", userid = " + userid + ", productypeleeave = " + productypeleeave + ", groupField = " + groupField + "}";
+        return "AbTestPvResult{timeinfo = " + timeinfo + ", numbers = " + numbers + ", productypeid = " + productypeid + ", userid = " + userid + ", productypeleeave = " + productypeleeave + ", testFlag = " + testFlag + ", groupField = " + groupField + "}";
     }
 }

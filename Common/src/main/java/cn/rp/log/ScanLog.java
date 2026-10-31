@@ -17,13 +17,17 @@ public class ScanLog {
     private long miaoshaid; //秒杀id
     private long huodongid; //活动id
     private int testFlag; //测试标志(AB基本)
-    private int dievceType; //设备类型
+    private int deviceType; //设备类型
 
+    private String macaddress;
+    private String deviceId;
+    private String wechatAccount;
+    private boolean isNewUser;
 
     public ScanLog() {
     }
 
-    public ScanLog(long userid, long proucntid, long productypeid, long productypeleeave, long productyParentid, long advertisingid, long time, long tuangouid, long miaoshaid, long huodongid, int testFlag, int dievceType) {
+    public ScanLog(long userid, long proucntid, long productypeid, long productypeleeave, long productyParentid, long advertisingid, long time, long tuangouid, long miaoshaid, long huodongid, int testFlag, int deviceType, String macaddress, String deviceId, String wechatAccount, boolean isNewUser) {
         this.userid = userid;
         this.proucntid = proucntid;
         this.productypeid = productypeid;
@@ -35,7 +39,11 @@ public class ScanLog {
         this.miaoshaid = miaoshaid;
         this.huodongid = huodongid;
         this.testFlag = testFlag;
-        this.dievceType = dievceType;
+        this.deviceType = deviceType;
+        this.macaddress = macaddress;
+        this.deviceId = deviceId;
+        this.wechatAccount = wechatAccount;
+        this.isNewUser = isNewUser;
     }
 
     /**
@@ -216,21 +224,85 @@ public class ScanLog {
 
     /**
      * 获取
-     * @return dievceType
+     * @return deviceType
      */
-    public int getDievceType() {
-        return dievceType;
+    public int getDeviceType() {
+        return deviceType;
     }
 
     /**
      * 设置
-     * @param dievceType
+     * @param deviceType
      */
-    public void setDievceType(int dievceType) {
-        this.dievceType = dievceType;
+    public void setDeviceType(int deviceType) {
+        this.deviceType = deviceType;
+    }
+
+    /**
+     * 获取
+     * @return macaddress
+     */
+    public String getMacaddress() {
+        return macaddress;
+    }
+
+    /**
+     * 设置
+     * @param macaddress
+     */
+    public void setMacaddress(String macaddress) {
+        this.macaddress = macaddress;
+    }
+
+    /**
+     * 获取
+     * @return deviceId
+     */
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    /**
+     * 设置
+     * @param deviceId
+     */
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    /**
+     * 获取
+     * @return wechatAccount
+     */
+    public String getWechatAccount() {
+        return wechatAccount;
+    }
+
+    /**
+     * 设置
+     * @param wechatAccount
+     */
+    public void setWechatAccount(String wechatAccount) {
+        this.wechatAccount = wechatAccount;
+    }
+
+    /**
+     * 获取
+     * @return isNewUser
+     */
+    public boolean isIsNewUser() {
+        return isNewUser;
+    }
+
+    /**
+     * 设置
+     * @param isNewUser
+     */
+    public void setIsNewUser(boolean isNewUser) {
+        this.isNewUser = isNewUser;
     }
 
     public String toString() {
-        return "ScanLog{userid = " + userid + ", proucntid = " + proucntid + ", productypeid = " + productypeid + ", productypeleeave = " + productypeleeave + ", productyParentid = " + productyParentid + ", advertisingid = " + advertisingid + ", time = " + time + ", tuangouid = " + tuangouid + ", miaoshaid = " + miaoshaid + ", huodongid = " + huodongid + ", testFlag = " + testFlag + ", dievceType = " + dievceType + "}";
+        return "ScanLog{userid = " + userid + ", proucntid = " + proucntid + ", productypeid = " + productypeid + ", productypeleeave = " + productypeleeave + ", productyParentid = " + productyParentid + ", advertisingid = " + advertisingid + ", time = " + time + ", tuangouid = " + tuangouid + ", miaoshaid = " + miaoshaid + ", huodongid = " + huodongid + ", testFlag = " + testFlag + ", deviceType = " + deviceType + ", macaddress = " + macaddress + ", deviceId = " + deviceId + ", wechatAccount = " + wechatAccount + ", isNewUser = " + isNewUser + "}";
     }
 }
