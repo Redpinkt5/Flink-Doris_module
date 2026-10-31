@@ -1,4 +1,4 @@
 - [Redpink 用户画像](memory/user.md) — 独立负责 AnalySystem 大数据实时分析项目
 - [协作风格反馈](memory/feedback.md) — 不要静默做事、简洁汇报
-- [项目当前状态](memory/project.md) — AI 看板模块设计已完成，待进入实现计划
+- [项目当前状态](memory/project.md) — AIBI 模块已抽离并推送；待轮换 DeepSeek key
 - [外部系统引用](memory/reference.md) — 监控面板等外部资源占位

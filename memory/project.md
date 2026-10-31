@@ -1,25 +1,30 @@
 ---
 name: project-current-init
-description: AI 记忆系统初始化注入 — 当前正在给项目注入记忆系统
+description: AIBI 模块已抽离为独立 Maven 模块并推送 GitHub；API key 已外部化
 metadata:
   type: project
 ---
 
 ## 当前项目
 
-**名称**: AnalySystem — 大数据实时分析平台
-**当前阶段**: AI 看板模块 Subagent-Driven 实现中（2026-06-30）
+**名称**: AnalySystem — 大数据实时分析平台（origin: github.com/Redpinkt5/Flink-Doris_module）
+**当前阶段**: AIBI 模块抽离完成并已推送（2026-11-01）
 
-## 进行中
+## 已完成
 
-- 注入 memory/ 骨架（user/feedback/project/reference 模板） ✅
-- 追加 CLAUDE.md 规范 ✅
-- 配置 PostToolUse hook 自动同步记忆索引时间戳 ✅
-- 原子 commit ✅
-- AI 看板模块设计（YAML 语义指标层 + MySQL 关键词 RAG） ✅
-- AI 看板模块实现计划 ✅
-- Subagent-Driven 执行实现计划 🔄
+- 存量改动 8 个逻辑提交（Analy 包重构 / Common 清理+HBase / Collect 首访识别 / Service 兼容修正 / TestDataGenerator / docs / memory）
+- AI BI 能力从 Service 抽离为独立 Maven 模块 `AIBI`（库风格，包名 cn.rp.ai / cn.rp.config 不变，Service 依赖调用，端口 8084 / /CollectService /ai/query 不变）
+- Service 裁剪 okhttp/gson/snakeyaml；AIBI pom 复制 Common/starter-web exclusions 防 logback/servlet-api 泄漏
+- DeepSeek key 外部化：`deepseek.api.key=${DEEPSEEK_API_KEY:}`，本地用环境变量注入
+- 用 filter-branch 重写未推送历史清除明文 key（GitHub Push Protection 拦截后的正确处理），44 个提交推送成功
+- 验证：AIBI 单测 6/6，全 reactor clean package 成功
 
-## 下一步
+## 待办
 
-调用 subagent-driven-development 技能，按 `docs/superpowers/plans/2026-06-30-ai-dashboard.md` 逐任务派发子代理执行。
+- **轮换 DeepSeek API key**（旧 key 出现在本地 git 历史与被拦截的推送中）
+- 本地启动 Service 前设置环境变量：`setx DEEPSEEK_API_KEY "sk-新key"`
+- doc/resume_text.txt（个人简历）已加 .gitignore，永不入库
+
+## 记忆系统决策
+
+inject-memory 插件 v2.1.0 新结构（_index.md/modules/bugs/progress）与本项目旧版记忆系统冲突，用户决定**跳过注入**，继续使用 user/feedback/project/reference + MEMORY.md 旧版结构。
