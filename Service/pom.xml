@@ -54,25 +54,11 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!-- DeepSeek HTTP Client -->
+        <!-- AI BI 语义层 / NL2SQL 模块 -->
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
-        </dependency>
-
-        <!-- JSON 解析 -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
-        </dependency>
-
-        <!-- YAML 解析 -->
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>2.2</version>
+            <groupId>cn.rp</groupId>
+            <artifactId>AIBI</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Spring JDBC -->

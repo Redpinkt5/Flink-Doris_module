@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>Common</module>
+        <module>AIBI</module>
         <module>Analy</module>
         <module>Service</module>
         <module>CollectService</module>
