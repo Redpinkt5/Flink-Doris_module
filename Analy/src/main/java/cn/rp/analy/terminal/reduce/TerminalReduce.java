@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.terminal.reduce;
+package cn.rp.analy.terminal.reduce;
 
 import cn.rp.entity.AbTestPvResult;
 import cn.rp.entity.TerminalInfoResult;

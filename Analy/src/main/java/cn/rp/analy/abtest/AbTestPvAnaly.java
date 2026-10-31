@@ -1,10 +1,10 @@
 package cn.rp.analy.abtest;
 
-import cn.rp.analy.abtest.map.AbTestPvMap;
-import cn.rp.analy.abtest.map.AbTestPvTotalMap;
-import cn.rp.analy.abtest.reduce.AbTestReduce;
-import cn.rp.analy.abtest.sink.AbTestLeavePvSink;
-import cn.rp.analy.abtest.sink.AbTestTotalLeavePvSink;
+import cn.rp.analy.map.AbTestPvMap;
+import cn.rp.analy.map.AbTestPvTotalMap;
+import cn.rp.analy.reduce.AbTestReduce;
+import cn.rp.analy.sink.AbTestLeavePvSink;
+import cn.rp.analy.sink.AbTestTotalLeavePvSink;
 import cn.rp.entity.AbTestPvResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;

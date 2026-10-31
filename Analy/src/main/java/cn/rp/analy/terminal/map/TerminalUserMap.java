@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.terminal.map;
+package cn.rp.analy.terminal.map;
 
 import cn.rp.entity.TerminalInfoResult;
 import cn.rp.log.ScanLog;

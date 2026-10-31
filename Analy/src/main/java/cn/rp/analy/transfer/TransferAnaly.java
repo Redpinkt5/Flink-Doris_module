@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.transfer;
+package cn.rp.analy.transfer;
 
 import cn.rp.util.KafkaUtils;
 import cn.rp.util.TransferUtil;

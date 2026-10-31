@@ -1,11 +1,15 @@
-package cn.rp.analy.abtest;
+package cn.rp.analy.orderAnaly;
 
 import cn.rp.analy.map.AbTestPvMap;
 import cn.rp.analy.map.AbTestPvTotalMap;
+import cn.rp.analy.orderAnaly.map.OrderAnalyMap;
+import cn.rp.analy.orderAnaly.reduce.OrderAnalyReduce;
+import cn.rp.analy.orderAnaly.sink.OrderAnalySink;
 import cn.rp.analy.reduce.AbTestReduce;
 import cn.rp.analy.sink.AbTestLeavePvSink;
 import cn.rp.analy.sink.AbTestTotalLeavePvSink;
 import cn.rp.entity.AbTestPvResult;
+import cn.rp.entity.OrderAnalyInfoResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -19,14 +23,14 @@ import org.apache.flink.streaming.api.windowing.time.Time;
  * @author Rp
  * @date 2026.6.9 16:30
  **/
-public class AbTestPvAnaly {
+public class OrderAnaly {
     public static void main(String[] args) {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         // 构建新一代 KafkaSource（替代已删除的 FlinkKafkaConsumer）
         KafkaSource<String> kafkaSource = KafkaSource.<String>builder()
                 .setBootstrapServers("192.168.88.101:9092")
-                .setTopics("test")
+                .setTopics("Order")
                 .setGroupId("rptest")
                 // 从最早位点开始消费（对应原代码的 setStartFromEarliest()）
                 .setStartingOffsets(OffsetsInitializer.earliest())
@@ -41,23 +45,15 @@ public class AbTestPvAnaly {
                 "Kafka Source"
         );
 
-        SingleOutputStreamOperator<AbTestPvResult> sreamLeaveMap = stream
-                .flatMap(new AbTestPvMap());
+        SingleOutputStreamOperator<OrderAnalyInfoResult> sreamLeaveMap = stream
+                .flatMap(new OrderAnalyMap());
 
-        SingleOutputStreamOperator<AbTestPvResult> streamLeaveReduce = sreamLeaveMap
+        SingleOutputStreamOperator<OrderAnalyInfoResult> streamLeaveReduce = sreamLeaveMap
                 .keyBy("groupField")
                 .timeWindow(Time.minutes(11))
-                .reduce(new AbTestReduce());
+                .reduce(new OrderAnalyReduce());
 
-        SingleOutputStreamOperator<AbTestPvResult> streamTotalMap = streamLeaveReduce.map(new AbTestPvTotalMap());
-
-        SingleOutputStreamOperator<AbTestPvResult> streamTotalReduce = streamTotalMap.keyBy("groupField")
-                .timeWindow(Time.minutes(11))
-                .reduce(new AbTestReduce());
-
-
-        streamLeaveReduce.addSink(new AbTestLeavePvSink());
-        streamTotalReduce.addSink(new AbTestTotalLeavePvSink());
+        streamLeaveReduce.addSink(new OrderAnalySink());
 
 
 
@@ -66,7 +62,7 @@ public class AbTestPvAnaly {
         stream.print();
 
         try {
-            env.execute("AbTestPvAnaly");
+            env.execute("OrderAnaly");
         } catch (Exception e) {
             e.printStackTrace();
         }

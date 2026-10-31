@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.terminal.sink;
+package cn.rp.analy.terminal.sink;
 
 import cn.rp.entity.TerminalInfoResult;
 import cn.rp.util.DorisDBUtil;
@@ -30,6 +30,6 @@ public class TerminalUserSink implements SinkFunction<TerminalInfoResult> {
         Set<String> intFieldSet = new HashSet<>();
         intFieldSet.add("numbers");
         intFieldSet.add("deviceType");
-        DorisDBUtil.saveData("TerminalNewUser", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "root", "123456");
+        DorisDBUtil.saveData("TerminalNewUser", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop");
     }
 }

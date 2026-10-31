@@ -1,6 +1,6 @@
-package cn.rp.analy.terminal.reduce;
+package cn.rp.analy.orderAnaly.reduce;
 
-import cn.rp.entity.AbTestPvResult;
+import cn.rp.entity.OrderAnalyInfoResult;
 import cn.rp.entity.TerminalInfoResult;
 import org.apache.flink.api.common.functions.ReduceFunction;
 
@@ -8,13 +8,13 @@ import org.apache.flink.api.common.functions.ReduceFunction;
  * @author Rp
  * @date 2026.6.10 05:19
  **/
-public class TerminalReduce implements ReduceFunction<TerminalInfoResult>{
+public class OrderAnalyReduce implements ReduceFunction<OrderAnalyInfoResult>{
     @Override
-    public TerminalInfoResult reduce(TerminalInfoResult terminalInfoResult, TerminalInfoResult t1) throws Exception {
-        long numbers1 = terminalInfoResult.getNumbers();
+    public OrderAnalyInfoResult reduce(OrderAnalyInfoResult orderAnalyInfoResult, OrderAnalyInfoResult t1) throws Exception {
+        long numbers1 = orderAnalyInfoResult.getNumbers();
         long numbers2 = t1.getNumbers();
 
-        terminalInfoResult.setNumbers(numbers1+numbers2);
-        return terminalInfoResult;
+        orderAnalyInfoResult.setNumbers(numbers1+numbers2);
+        return orderAnalyInfoResult;
     }
 }

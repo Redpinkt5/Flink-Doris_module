@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.map;
+package cn.rp.analy.map;
 
 import cn.rp.entity.AbTestPvResult;
 import cn.rp.log.ScanLog;
@@ -28,14 +28,16 @@ public class AbTestUvMap implements FlatMapFunction<String, AbTestPvResult> {
         if(userid < 0){
             return;
         }
-        String groupFieldDay = "abtestuv==" +"=="+ daytime +"=="+ productypeleeave +"=="+ productypeid +"=="+ userid;
-        String groupFieldHour = "abtestuv==" +"=="+ hourtime +"=="+ productypeleeave +"=="+ productypeid +"=="+ userid;
+        int testFlag = scanLog.getTestFlag();
+        String groupFieldDay = "abtestuv==" +"=="+ daytime +"=="+ productypeleeave +"=="+ productypeid +"=="+ userid+testFlag;
+        String groupFieldHour = "abtestuv==" +"=="+ hourtime +"=="+ productypeleeave +"=="+ productypeid +"=="+ userid+testFlag;
 
         AbTestPvResult abTestPvResultDay = new AbTestPvResult();
         abTestPvResultDay.setGroupField(groupFieldDay);
         abTestPvResultDay.setNumbers(numbers);
         abTestPvResultDay.setProductypeleeave(productypeleeave);
         abTestPvResultDay.setProductypeid(productypeid);
+        abTestPvResultDay.setTestFlag(testFlag);
         abTestPvResultDay.setTimeinfo(daytime);
         abTestPvResultDay.setUserid(userid);
 
@@ -45,6 +47,7 @@ public class AbTestUvMap implements FlatMapFunction<String, AbTestPvResult> {
         abTestPvResultHour.setGroupField(groupFieldHour);
         abTestPvResultHour.setNumbers(numbers);
         abTestPvResultHour.setProductypeleeave(productypeleeave);
+        abTestPvResultHour.setTestFlag(testFlag);
         abTestPvResultHour.setProductypeid(productypeid);
         abTestPvResultHour.setTimeinfo(hourtime);
         abTestPvResultHour.setUserid(userid);

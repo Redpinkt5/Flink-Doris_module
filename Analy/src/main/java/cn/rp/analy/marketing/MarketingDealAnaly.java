@@ -1,10 +1,8 @@
-package cn.rp.analy.abtest.marketing;
+package cn.rp.analy.marketing;
 
-import cn.rp.analy.abtest.marketing.map.MarketingDealMap;
-import cn.rp.analy.abtest.marketing.map.MarketingLiuliangMap;
-import cn.rp.analy.abtest.marketing.reduce.MarketingReduce;
-import cn.rp.analy.abtest.marketing.sink.MarketingDealSink;
-import cn.rp.analy.abtest.marketing.sink.MarketingLiuliangSink;
+import cn.rp.analy.marketing.map.MarketingDealMap;
+import cn.rp.analy.marketing.reduce.MarketingReduce;
+import cn.rp.analy.marketing.sink.MarketingDealSink;
 import cn.rp.entity.MarketingInfoResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;

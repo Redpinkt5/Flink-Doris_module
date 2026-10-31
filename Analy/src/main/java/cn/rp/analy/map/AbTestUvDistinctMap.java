@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.map;
+package cn.rp.analy.map;
 
 import cn.rp.entity.AbTestPvResult;
 import org.apache.flink.api.common.functions.FlatMapFunction;
@@ -14,13 +14,18 @@ public class AbTestUvDistinctMap implements FlatMapFunction<AbTestPvResult, AbTe
         String timeinfo = abTestPvResult.getTimeinfo();
         long productypeleeave = abTestPvResult.getProductypeleeave();
         long productypeid = abTestPvResult.getProductypeid();
-        String groupField = "abtestuvDistinc==" +"=="+ timeinfo +"=="+ productypeleeave +"=="+ productypeid;
+
+        int testFlag = abTestPvResult.getTestFlag();
+
+        String groupField = " abtestuvDistinc ==" + "==" + timeinfo + "==" + productypeleeave +"=="+ productypeid + "==" + testFlag;
+
 
 
 
         AbTestPvResult abTestPvResultDay = new AbTestPvResult();
         abTestPvResultDay.setGroupField(groupField);
         abTestPvResultDay.setNumbers(1l);
+        abTestPvResultDay.setTestFlag(testFlag);
         abTestPvResultDay.setProductypeleeave(productypeleeave);
         abTestPvResultDay.setProductypeid(productypeid);
         abTestPvResultDay.setTimeinfo(timeinfo);

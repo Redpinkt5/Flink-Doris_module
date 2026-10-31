@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.marketing.sink;
+package cn.rp.analy.marketing.sink;
 
 import cn.rp.entity.MarketingInfoResult;
 import cn.rp.util.DorisDBUtil;
@@ -34,7 +34,7 @@ public class MarketingDealSink implements SinkFunction<MarketingInfoResult> {
             dataMap.put("huodongid", huodongid);
             dataMap.put("timeinfo", timeinfo);
             dataMap.put("numbers", numbers);
-            DorisDBUtil.saveData("MarketingDealhuodong", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "root", "123456");
+            DorisDBUtil.saveData("MarketingDealhuodong", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop");
 
         }
         if(tuangouid> 0){
@@ -42,7 +42,7 @@ public class MarketingDealSink implements SinkFunction<MarketingInfoResult> {
             dataMap.put("tuangouid", tuangouid);
             dataMap.put("timeinfo", timeinfo);
             dataMap.put("numbers", numbers);
-            DorisDBUtil.saveData("MarketingDealtuangou", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "root", "123456");
+            DorisDBUtil.saveData("MarketingDealtuangou", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop");
 
         }
         if(miaoshaid> 0){
@@ -50,7 +50,7 @@ public class MarketingDealSink implements SinkFunction<MarketingInfoResult> {
             dataMap.put("miaoshaid", miaoshaid);
             dataMap.put("timeinfo", timeinfo);
             dataMap.put("numbers", numbers);
-            DorisDBUtil.saveData("MarketingDealmiaosha", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "root", "123456");
+            DorisDBUtil.saveData("MarketingDealmiaosha", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop");
 
         }
     }

@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.sink;
+package cn.rp.analy.sink;
 
 import cn.rp.entity.AbTestPvResult;
 import cn.rp.util.DorisDBUtil;
@@ -22,11 +22,13 @@ public class AbTestLeavePvSink implements SinkFunction<AbTestPvResult> {
 
         long numbers = value.getNumbers();
         long productypeid = value.getProductypeid();
+        int testFlag = value.getTestFlag();
 
         long productypeleeave = value.getProductypeleeave();
 
         dataMap.put("timeinfo", timeinfo);
         dataMap.put("numbers", numbers);
+        dataMap.put("testFlag", testFlag);
         dataMap.put("productypeleeave", productypeleeave);
 
         dataMap.put("productypeid", productypeid);
@@ -34,7 +36,7 @@ public class AbTestLeavePvSink implements SinkFunction<AbTestPvResult> {
         intFieldSet.add("numbers");
         intFieldSet.add("productypeid");
         intFieldSet.add("productypeleeave");
-        DorisDBUtil.saveData("AbTestPv", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "root", "123456");
+        DorisDBUtil.saveData("AbTestPv", dataMap, intFieldSet, "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop");
 
     }
 

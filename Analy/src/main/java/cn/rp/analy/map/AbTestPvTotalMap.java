@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.map;
+package cn.rp.analy.map;
 
 import cn.rp.entity.AbTestPvResult;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -12,8 +12,9 @@ public class AbTestPvTotalMap implements MapFunction<AbTestPvResult, AbTestPvRes
     @Override
     public AbTestPvResult map(AbTestPvResult abTestPvResult) throws Exception {
 
+        int testFlag = abTestPvResult.getTestFlag();
         String timeString = abTestPvResult.getTimeinfo();
-        String groupFieldDay = "abtestpvTotal==" + timeString;
+        String groupFieldDay = "abtestpvTotal==" + timeString +testFlag;
 
 
         long numbers = 11;
@@ -21,6 +22,7 @@ public class AbTestPvTotalMap implements MapFunction<AbTestPvResult, AbTestPvRes
         AbTestPvResult abTestPvResultDay = new AbTestPvResult();
         abTestPvResultDay.setGroupField(groupFieldDay);
         abTestPvResultDay.setNumbers(numbers);
+        abTestPvResultDay.setTestFlag(testFlag);
         abTestPvResultDay.setTimeinfo(timeString);
 
         return abTestPvResultDay;

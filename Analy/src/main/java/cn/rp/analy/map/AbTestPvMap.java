@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.map;
+package cn.rp.analy.map;
 
 import cn.rp.entity.AbTestPvResult;
 import cn.rp.log.ScanLog;
@@ -22,15 +22,19 @@ public class AbTestPvMap implements FlatMapFunction<String, AbTestPvResult> {
         String hourtime = DateUtil.getHour(time);
 
         long numbers = 1;
+        int testFlag = scanLog.getTestFlag();//AB基本三个版本
+
         long productypeleeave = scanLog.getProductypeleeave();
         long productypeid = scanLog.getProductypeid();
-        String groupFieldDay = "abtestpv==" + daytime + productypeleeave + productypeid;
-        String groupFieldHour = "abtestpv==" + hourtime + productypeleeave + productypeid;
+        String groupFieldDay = "abtestpv==" + daytime + productypeleeave + productypeid + testFlag;
+        String groupFieldHour = "abtestpv==" + hourtime + productypeleeave + productypeid + testFlag;
+
 
         AbTestPvResult abTestPvResultDay = new AbTestPvResult();
         abTestPvResultDay.setGroupField(groupFieldDay);
         abTestPvResultDay.setNumbers(numbers);
         abTestPvResultDay.setProductypeleeave(productypeleeave);
+        abTestPvResultDay.setTestFlag(testFlag);
         abTestPvResultDay.setProductypeid(productypeid);
         abTestPvResultDay.setTimeinfo(daytime);
 
@@ -39,6 +43,7 @@ public class AbTestPvMap implements FlatMapFunction<String, AbTestPvResult> {
         AbTestPvResult abTestPvResultHour = new AbTestPvResult();
         abTestPvResultHour.setGroupField(groupFieldHour);
         abTestPvResultHour.setNumbers(numbers);
+        abTestPvResultHour.setTestFlag(testFlag);
         abTestPvResultHour.setProductypeleeave(productypeleeave);
         abTestPvResultHour.setProductypeid(productypeid);
         abTestPvResultHour.setTimeinfo(hourtime);

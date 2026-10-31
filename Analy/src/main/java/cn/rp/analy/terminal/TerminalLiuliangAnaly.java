@@ -1,8 +1,8 @@
-package cn.rp.analy.abtest.terminal;
+package cn.rp.analy.terminal;
 
-import cn.rp.analy.abtest.terminal.map.TerminalLiuliangMap;
-import cn.rp.analy.abtest.terminal.reduce.TerminalReduce;
-import cn.rp.analy.abtest.terminal.sink.TerminalLiuliangSink;
+import cn.rp.analy.terminal.map.TerminalLiuliangMap;
+import cn.rp.analy.terminal.reduce.TerminalReduce;
+import cn.rp.analy.terminal.sink.TerminalLiuliangSink;
 import cn.rp.entity.TerminalInfoResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;

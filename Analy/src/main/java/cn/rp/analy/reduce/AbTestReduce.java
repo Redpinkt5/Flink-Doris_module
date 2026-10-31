@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.reduce;
+package cn.rp.analy.reduce;
 
 import cn.rp.entity.AbTestPvResult;
 import org.apache.flink.api.common.functions.ReduceFunction;

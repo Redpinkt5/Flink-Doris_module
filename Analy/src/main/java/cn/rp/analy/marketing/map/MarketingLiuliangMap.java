@@ -1,4 +1,4 @@
-package cn.rp.analy.abtest.marketing.map;
+package cn.rp.analy.marketing.map;
 
 import cn.rp.entity.AbTestPvResult;
 import cn.rp.entity.MarketingInfoResult;

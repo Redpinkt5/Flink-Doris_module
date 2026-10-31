@@ -1,13 +1,8 @@
-package cn.rp.analy.abtest.terminal;
+package cn.rp.analy.terminal;
 
-import cn.rp.analy.abtest.map.AbTestPvMap;
-import cn.rp.analy.abtest.map.AbTestPvTotalMap;
-import cn.rp.analy.abtest.reduce.AbTestReduce;
-import cn.rp.analy.abtest.sink.AbTestLeavePvSink;
-import cn.rp.analy.abtest.sink.AbTestTotalLeavePvSink;
-import cn.rp.analy.abtest.terminal.map.TerminalUserMap;
-import cn.rp.analy.abtest.terminal.reduce.TerminalReduce;
-import cn.rp.analy.abtest.terminal.sink.TerminalUserSink;
+import cn.rp.analy.terminal.map.TerminalUserMap;
+import cn.rp.analy.terminal.reduce.TerminalReduce;
+import cn.rp.analy.terminal.sink.TerminalUserSink;
 import cn.rp.entity.TerminalInfoResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
