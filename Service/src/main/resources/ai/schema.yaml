@@ -1,0 +1,298 @@
+# ============================================================
+# AI 看板语义层配置
+# 指标 & 维度 定义，供 NL2SQL 使用
+# ============================================================
+
+tables:
+  # ---------- 订单域 ----------
+  - tableName: OrderTide
+    businessDomain: 订单
+    description: 订单成交趋势数据
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位如20260601，小时级10位如2026060110"
+        isTimeField: true
+        dayPattern: "yyyyMMdd"
+        hourPattern: "yyyyMMddHH"
+      - fieldName: numbers
+        type: Long
+        description: 订单成交数量
+        isMetric: true
+      - fieldName: productypeid
+        type: Long
+        description: 产品类目ID，需关联HBase获取名称
+        isDimension: true
+      - fieldName: groupField
+        type: String
+        description: 分组字段
+
+  # ---------- 营销域 - 流量 ----------
+  - tableName: MarketingLiuliangtuangou
+    businessDomain: 营销
+    description: 团购活动页面浏览量
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位如20260601，小时级10位如2026060110"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 团购活动页面浏览量
+        isMetric: true
+      - fieldName: tuangouid
+        type: Long
+        description: 团购活动ID
+        isDimension: true
+
+  - tableName: MarketingLiuliangmiaosha
+    businessDomain: 营销
+    description: 秒杀活动页面浏览量
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 秒杀活动页面浏览量
+        isMetric: true
+      - fieldName: miaoshaid
+        type: Long
+        description: 秒杀活动ID
+        isDimension: true
+
+  - tableName: MarketingLiulianghuodong
+    businessDomain: 营销
+    description: 大促活动页面浏览量
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 大促活动页面浏览量
+        isMetric: true
+      - fieldName: huodongid
+        type: Long
+        description: 大促活动ID
+        isDimension: true
+
+  # ---------- 营销域 - 交易 ----------
+  - tableName: MarketingDealtuangou
+    businessDomain: 营销
+    description: 团购成交订单数
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 团购成交订单数
+        isMetric: true
+      - fieldName: tuangouid
+        type: Long
+        description: 团购活动ID
+        isDimension: true
+
+  - tableName: MarketingDealmiaosha
+    businessDomain: 营销
+    description: 秒杀成交订单数
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 秒杀成交订单数
+        isMetric: true
+      - fieldName: miaoshaid
+        type: Long
+        description: 秒杀活动ID
+        isDimension: true
+
+  - tableName: MarketingDealhuodong
+    businessDomain: 营销
+    description: 大促成交订单数
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 大促成交订单数
+        isMetric: true
+      - fieldName: huodongid
+        type: Long
+        description: 大促活动ID
+        isDimension: true
+
+  # ---------- 终端域 ----------
+  - tableName: TerminalLiuliang
+    businessDomain: 终端
+    description: 各终端设备访问量
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 各终端设备访问量
+        isMetric: true
+      - fieldName: deviceType
+        type: Integer
+        description: "设备类型：0=其他，1=移动端，2=PC端"
+        isDimension: true
+        valueMapping:
+          0: "其他"
+          1: "移动端"
+          2: "PC端"
+
+  - tableName: TerminalNewUser
+    businessDomain: 终端
+    description: 各终端新增用户数
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 各终端新增用户数
+        isMetric: true
+      - fieldName: deviceType
+        type: Integer
+        description: "设备类型：0=其他，1=移动端，2=PC端"
+        isDimension: true
+        valueMapping:
+          0: "其他"
+          1: "移动端"
+          2: "PC端"
+
+  # ---------- ABTest 域 ----------
+  - tableName: AbTestPv
+    businessDomain: AB测试
+    description: AB测试页面浏览量明细
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 页面浏览量
+        isMetric: true
+      - fieldName: testFlag
+        type: Integer
+        description: "版本标识：1=A版，2=B版，3=基本版"
+        isDimension: true
+        valueMapping:
+          1: "A版"
+          2: "B版"
+          3: "基本版"
+      - fieldName: productypeid
+        type: Long
+        description: 产品类目ID
+        isDimension: true
+      - fieldName: productypeleeave
+        type: Integer
+        description: "产品等级：1=等级1，2=等级2，3=等级3"
+        isDimension: true
+        valueMapping:
+          1: "等级1"
+          2: "等级2"
+          3: "等级3"
+
+  - tableName: AbTestUv
+    businessDomain: AB测试
+    description: AB测试独立访客数明细
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 独立访客数
+        isMetric: true
+      - fieldName: testFlag
+        type: Integer
+        description: "版本标识：1=A版，2=B版，3=基本版"
+        isDimension: true
+        valueMapping:
+          1: "A版"
+          2: "B版"
+          3: "基本版"
+      - fieldName: productypeid
+        type: Long
+        description: 产品类目ID
+        isDimension: true
+      - fieldName: productypeleeave
+        type: Integer
+        description: "产品等级：1=等级1，2=等级2，3=等级3"
+        isDimension: true
+        valueMapping:
+          1: "等级1"
+          2: "等级2"
+          3: "等级3"
+
+  - tableName: AbTestPvTotal
+    businessDomain: AB测试
+    description: AB测试PV汇总
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 页面浏览量汇总
+        isMetric: true
+      - fieldName: testFlag
+        type: Integer
+        description: "版本标识：1=A版，2=B版，3=基本版"
+        isDimension: true
+        valueMapping:
+          1: "A版"
+          2: "B版"
+          3: "基本版"
+
+  - tableName: AbTestUvTotal
+    businessDomain: AB测试
+    description: AB测试UV汇总
+    fields:
+      - fieldName: timeinfo
+        type: String
+        description: "时间标识，天级8位，小时级10位"
+        isTimeField: true
+      - fieldName: numbers
+        type: Long
+        description: 独立访客数汇总
+        isMetric: true
+      - fieldName: testFlag
+        type: Integer
+        description: "版本标识：1=A版，2=B版，3=基本版"
+        isDimension: true
+        valueMapping:
+          1: "A版"
+          2: "B版"
+          3: "基本版"
+
+# ============================================================
+# 查询规则
+# ============================================================
+queryRules:
+  timeField: timeinfo
+  dayTimeLen: 8
+  hourTimeLen: 10
+  defaultDayPattern: "yyyyMMdd"
+  defaultHourPattern: "yyyyMMddHH"
+  defaultLimit: 10
+  database: hadoop_db
+  jdbcUrl: "jdbc:mysql://192.168.88.101:9030/hadoop_db"
+  jdbcDriver: "com.mysql.cj.jdbc.Driver"

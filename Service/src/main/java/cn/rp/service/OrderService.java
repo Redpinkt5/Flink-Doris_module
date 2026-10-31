@@ -65,8 +65,8 @@ public class OrderService {
                     + " order by timeinfo desc limit 10;";
 
             ResultSet resultSet = DorisDBUtil.quereBySql(
-                    "jdbc:mysql://192.168.88.101:9030/dorisTest",
-                    "com.mysql.cj.jdbc.Driver", "root", "123456", sql);
+                    "jdbc:mysql://192.168.88.101:9030/hadoop_db",
+                    "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop", sql);
 
             Map<String, Long> dataMap = new LinkedHashMap<>();
             while (resultSet.next()) {
@@ -105,13 +105,16 @@ public class OrderService {
      */
     private OrderAnalyResult categoryTide(String tableName, int timeLen, String pattern) {
         try {
-            String sql = "select timeinfo,productypeid,numbers from " + tableName
-                    + " where length(timeinfo) = " + timeLen
-                    + " order by timeinfo desc limit 100;";
+            String sql = "select timeinfo, productypeid, numbers from (" +
+                    "  select timeinfo, productypeid, numbers," +
+                    "    row_number() over(partition by productypeid order by timeinfo desc) as rownumber" +
+                    "  from " + tableName +
+                    "  where length(timeinfo) = " + timeLen +
+                    ") aa where rownumber <= 10;";
 
             ResultSet resultSet = DorisDBUtil.quereBySql(
-                    "jdbc:mysql://192.168.88.101:9030/dorisTest",
-                    "com.mysql.cj.jdbc.Driver", "root", "123456", sql);
+                    "jdbc:mysql://192.168.88.101:9030/hadoop_db",
+                    "com.mysql.cj.jdbc.Driver", "hadoop", "hadoop", sql);
 
             // 外层：类目；内层：时间 -> numbers
             Map<String, Map<String, Long>> categoryMap = new LinkedHashMap<>();

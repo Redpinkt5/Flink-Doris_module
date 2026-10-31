@@ -63,9 +63,10 @@ public class AiPromptBuilder {
                 .replace("{hour_ago}", hourAgo);
     }
 
+
+
     public String buildSystemPrompt(String question) {
-        List<MetricMatchResult> matches = metricSemanticParser != null
-                ? metricSemanticParser.parse(question)
+        List<MetricMatchResult> matches = metricSemanticParser != null ? metricSemanticParser.parse(question)
                 : Collections.emptyList();
         return buildSystemPrompt(matches);
     }

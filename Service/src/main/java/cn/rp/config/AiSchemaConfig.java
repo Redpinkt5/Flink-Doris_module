@@ -60,7 +60,7 @@ public class AiSchemaConfig {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        var tables = (java.util.List<Map<String, Object>>) schemaConfig.get("tables");
+        java.util.List<Map<String, Object>> tables = (java.util.List<Map<String, Object>>) schemaConfig.get("tables");
         if (tables == null) {
             return "";
         }
@@ -68,7 +68,7 @@ public class AiSchemaConfig {
             sb.append("表名：").append(table.get("tableName"))
               .append("，业务域：").append(table.get("businessDomain"))
               .append("，说明：").append(table.get("description")).append("\n");
-            var fields = (java.util.List<Map<String, Object>>) table.get("fields");
+            java.util.List<Map<String, Object>> fields = (java.util.List<Map<String, Object>>) table.get("fields");
             if (fields != null) {
                 for (Map<String, Object> field : fields) {
                     String fieldName = String.valueOf(field.get("fieldName"));
@@ -82,7 +82,7 @@ public class AiSchemaConfig {
                     }
                     if (field.get("isDimension") != null && Boolean.TRUE.equals(field.get("isDimension"))) {
                         line.append(" [维度]");
-                        var mapping = (Map<String, Object>) field.get("valueMapping");
+                        java.util.Map<String, Object> mapping = (java.util.Map<String, Object>) field.get("valueMapping");
                         if (mapping != null && !mapping.isEmpty()) {
                             line.append("，值域：").append(mapping);
                         }
@@ -98,20 +98,22 @@ public class AiSchemaConfig {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getQueryRules() {
         if (schemaConfig == null) {
-            return Map.of();
+            return java.util.Collections.emptyMap();
         }
         Map<String, Object> rules = (Map<String, Object>) schemaConfig.get("queryRules");
-        return rules != null ? rules : Map.of();
+        return rules != null ? rules : java.util.Collections.emptyMap();
     }
 
     public String getJdbcUrl() {
         Map<String, Object> rules = getQueryRules();
-        return String.valueOf(rules.getOrDefault("jdbcUrl", "jdbc:mysql://192.168.88.101:9030/hadoop_db"));
+        Object jdbcUrl = rules.get("jdbcUrl");
+        return jdbcUrl != null ? String.valueOf(jdbcUrl) : "jdbc:mysql://192.168.88.101:9030/hadoop_db";
     }
 
     public String getJdbcDriver() {
         Map<String, Object> rules = getQueryRules();
-        return String.valueOf(rules.getOrDefault("jdbcDriver", "com.mysql.cj.jdbc.Driver"));
+        Object driver = rules.get("jdbcDriver");
+        return driver != null ? String.valueOf(driver) : "com.mysql.cj.jdbc.Driver";
     }
 
     public int getDefaultLimit() {

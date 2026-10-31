@@ -22,10 +22,10 @@ import java.util.*;
 @Service
 public class TerminalService {
 
-    private static final String URL = "jdbc:mysql://192.168.88.101:9030/dorisTest";
+    private static final String URL = "jdbc:mysql://192.168.88.101:9030/hadoop_db";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String USER = "root";
-    private static final String PWD = "123456";
+    private static final String USER = "hadoop";
+    private static final String PWD = "hadoop";
 
     // ==================== 终端流量（TerminalLiuliang 表） ====================
 
@@ -66,10 +66,12 @@ public class TerminalService {
      */
     private TerminalAnalyResult deviceTide(String tableName, int timeLen, String pattern, String defaultName) {
         try {
-            String sql = "select timeinfo,deviceType,numbers from " + tableName
-                    + " where length(timeinfo) = " + timeLen
-                    + " order by timeinfo desc limit 100;";
-
+            String sql = "select timeinfo, numbers, deviceType from (" +
+                    "  select timeinfo, numbers, deviceType," +
+                    "    row_number() over(partition by deviceType order by timeinfo desc) as rownumber" +
+                    "  from " + tableName +
+                    "  where length(timeinfo) = " + timeLen +
+                    ") aa where rownumber <= 10;";
             ResultSet resultSet = DorisDBUtil.quereBySql(URL, DRIVER, USER, PWD, sql);
 
             // 外层：设备类型；内层：时间 -> numbers
